@@ -9,12 +9,12 @@ IMPLEMENTATION MODE
 
 ## Current Milestone
 
-M8 — Credentials & Devices (VERIFIED)  
-Next Milestone: M9 — Integrations & Media Abstraction
+M9 — Integrations & Media Abstraction (VERIFIED)  
+Next Milestone: M10 — Analytics & Reporting (Stream 14)
 
 ## Current Task
 
-M8-001 — Credentials & Devices: Access Credentials, SHA-256 Secret Hashing, Device Binding, Second Device Policy, Authorized Device Replacement, Credential Lifecycle, and Credential Gate. (COMPLETED & VERIFIED)
+M9-001 — Integrations & Media Abstraction: Meeting Provider Abstraction (Google Meet, Zoom, Mock), Video Provider Abstraction (Vimeo, Google Drive, Mock), Provider Failover & Timeout Handling, External ID Mapping, Webhook Signature Verification, Idempotency, and Media / Meeting Gate. (COMPLETED & VERIFIED)
 
 ## Completed
 
@@ -85,17 +85,29 @@ M8-001 — Credentials & Devices: Access Credentials, SHA-256 Secret Hashing, De
     - Full lifecycle states (`pending`, `active`, `suspended`, `revoked`, `expired`)
   - Controllers: `CredentialController`
   - Credential Gate verified in `CredentialGateTest` (Phase J §37)
+- **M9-001 Integrations & Media Abstraction**:
+  - Provider abstractions: `MeetingProviderInterface`, `VideoProviderInterface`
+  - Adapters: `GoogleMeetProvider`, `ZoomMeetingProvider`, `MockMeetingProvider`, `VimeoVideoProvider`, `GoogleDriveVideoProvider`, `MockVideoProvider`
+  - Resilience & Failover: `MeetingProviderManager`, `VideoProviderManager` with automatic fallback
+  - Tenant database migration for `meetings`, `media_assets`, and `integration_webhook_logs`
+  - Invariants strictly enforced:
+    - Vendor SDK abstraction (`Domain Contract -> Application Interface -> Provider Adapter -> External SDK`)
+    - Idempotent meeting creation (`idempotency_key`)
+    - External ID mapping (`external_meeting_id`, `external_media_id`)
+    - Provider webhook HMAC-SHA256 signature verification
+    - Strict cross-tenant isolation
+  - Controllers: `MeetingController`, `MediaController`, `WebhookController`
+  - Media / Meeting Gate verified in `IntegrationGateTest` (Phase J §40)
 
 ## In Progress
 
-- Preparation for M9 (Integrations & Media Abstraction: Meeting Providers, Video Providers, Storage Adapters, Integration Gate)
+- Preparation for M10 (Analytics & Reporting: Stream 14, Attendance/Academic/Financial Reporting, Asynchronous Processing)
 
 ## Pending
 
-- M9 Integrations
-- M10 Analytics / Reporting
-- M11 Full Frontend
-- M12 Full Verification
+- M10 Analytics & Reporting
+- M11 Full Frontend Integration
+- M12 Full System Verification
 - M13 Production Hardening
 - M14 Production Readiness
 
@@ -105,7 +117,7 @@ None.
 
 ## Verification Evidence
 
-- Backend Tests: `vendor/bin/phpunit` -> 22 tests, 288 assertions passed (CredentialGateTest, BillingGateTest, AssessmentGateTest, AttendanceGateTest, EducationGateTest, IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
+- Backend Tests: `vendor/bin/phpunit` -> 23 tests, 321 assertions passed (IntegrationGateTest, CredentialGateTest, BillingGateTest, AssessmentGateTest, AttendanceGateTest, EducationGateTest, IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
 - Backend Linter: `vendor/bin/pint --test` -> Passed (0 violations)
 - Frontend Types: `npx tsc --noEmit` -> Passed (0 errors)
 - Frontend Linter: `npm run lint` -> Passed (0 errors)

@@ -2,6 +2,53 @@
 
 All notable changes to this project will be documented in this file.
 
+## [M9-001] - 2026-09-30
+### Added
+- Integrations & Media Abstraction Domain:
+  - Provider abstraction contracts:
+    - `MeetingProviderInterface` (create, get join URL, cancel, verify webhook signature)
+    - `VideoProviderInterface` (upload/register, get embed URL, get status, verify webhook signature)
+  - Domain Data Transfer Objects (DTOs):
+    - `MeetingRequest`, `MeetingResponse`, `VideoUploadRequest`, `VideoUploadResponse`
+  - Domain Exceptions:
+    - `ProviderException`, `ProviderTimeoutException`, `InvalidSignatureException`
+  - Meeting Provider Adapters:
+    - `GoogleMeetProvider`: Formats Google Meet codes and URLs, verifies HMAC signatures
+    - `ZoomMeetingProvider`: Formats Zoom meeting IDs and URLs, verifies HMAC signatures
+    - `MockMeetingProvider`: Configurable mock for testing success, timeouts, and failures
+  - Video Provider Adapters:
+    - `VimeoVideoProvider`: Generates Vimeo embed URLs and status responses
+    - `GoogleDriveVideoProvider`: Generates Google Drive preview embed URLs
+    - `MockVideoProvider`: Configurable mock for video upload and embed testing
+  - Resilience & Failover Managers:
+    - `MeetingProviderManager`: Resolves provider drivers with automatic multi-provider failover
+    - `VideoProviderManager`: Resolves video provider drivers with automatic multi-provider failover
+  - Tenant database migration for `meetings`, `media_assets`, and `integration_webhook_logs`
+  - Eloquent domain models:
+    - `Meeting`: Virtual meetings attached to courses/sessions/staff with provider external ID mapping
+    - `MediaAsset`: Video/audio/document media assets with embed URL resolution
+    - `IntegrationWebhookLog`: Audit log for incoming webhooks with status tracking
+  - Controllers:
+    - `MeetingController`: Index, store (with idempotency check and failover), show, joinUrl, cancel
+    - `MediaController`: Index, store (with failover), show, embedUrl
+    - `WebhookController`: Signed provider webhook ingestion with HMAC-SHA256 signature verification and lifecycle event execution
+  - Media / Meeting Gate verified in `IntegrationGateTest` (Phase J §40):
+    - Provider success (meeting created, join URL generated, video uploaded, embed URL generated)
+    - External ID mapping verified
+    - Idempotency enforced on duplicate requests (200 OK replay)
+    - Provider timeout handled gracefully with 504 Gateway Timeout
+    - Provider failure handled gracefully with 502 Bad Gateway
+    - Webhook signature verification verified (200 for valid HMAC signature, 401 for invalid signature)
+    - Tenant isolation strictly verified (cross-tenant 404)
+    - RBAC authorization verified (403 for unauthorized users)
+  - Suite: 23 tests, 321 assertions passed (100% pass)
+- Documentation updates:
+  - `docs/domains/meetings/README.md`
+  - `docs/domains/media/README.md`
+  - `docs/backend/README.md`
+  - `docs/project-management/current-state.md`
+  - `docs/project-management/implementation-ledger.md`
+
 ## [M8-001] - 2026-09-29
 ### Added
 - Credentials & Devices Domain:

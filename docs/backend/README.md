@@ -151,7 +151,32 @@ apps/api/
 
 ---
 
-## 8. Identity, Authentication & Authorization (M3)
+## 8. Integrations & Media Abstraction Domain (M9)
+
+- **Domain Models (Tenant Database)**:
+  - `Meeting`: Scheduled or instant meeting with external ID mapping, join URL, host URL, and provider identification.
+  - `MediaAsset`: Provider-agnostic educational video/audio asset with embed and playback URL generation.
+  - `IntegrationWebhookLog`: Audit log of incoming provider webhook notifications with signature verification status.
+- **Provider Abstraction Architecture**:
+  - `Domain Contract -> Application Interface -> Provider Adapter -> External SDK`
+  - Meeting Providers: `GoogleMeetProvider`, `ZoomMeetingProvider`, `MockMeetingProvider`
+  - Video Providers: `VimeoVideoProvider`, `GoogleDriveVideoProvider`, `MockVideoProvider`
+  - Managers with failover: `MeetingProviderManager`, `VideoProviderManager`
+- **Invariants Enforced**:
+  - Core domain never depends on vendor SDK classes
+  - Idempotent meeting creation (`idempotency_key`)
+  - Webhook signature authentication required before mutating tenant state
+  - Strict cross-tenant isolation (SEC-INV-001)
+  - Failures default to deny (SEC-INV-009)
+- **Controllers**:
+  - `App\Http\Controllers\Api\Integration\MeetingController`
+  - `App\Http\Controllers\Api\Integration\MediaController`
+  - `App\Http\Controllers\Api\Integration\WebhookController`
+- **Integration Gate Verified**: Proven via `IntegrationGateTest` (Phase J §40 Gate: provider success, provider timeout handling, provider failure handling, duplicate request idempotency, external ID mapping, webhook signature verification, cross-tenant isolation, and RBAC authorization).
+
+---
+
+## 9. Identity, Authentication & Authorization (M3)
 
 - **Global Student Identity**: Control plane model (`GlobalIdentity`) linking across tenants via `StudentIdentityLink`.
 - **Invariants Enforced**:

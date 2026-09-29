@@ -19,6 +19,9 @@ use App\Http\Controllers\Api\Education\EnrollmentController;
 use App\Http\Controllers\Api\Education\LessonController;
 use App\Http\Controllers\Api\Education\StudentController;
 use App\Http\Controllers\Api\HealthCheckController;
+use App\Http\Controllers\Api\Integration\MediaController;
+use App\Http\Controllers\Api\Integration\MeetingController;
+use App\Http\Controllers\Api\Integration\WebhookController;
 use App\Http\Controllers\Api\TenantCurrentController;
 use Illuminate\Support\Facades\Route;
 
@@ -174,5 +177,20 @@ Route::middleware('tenant')->group(function () {
         Route::post('/credentials/{id}/revoke', [CredentialController::class, 'revoke'])
             ->middleware('tenant.can:credentials.revoke')
             ->name('api.credentials.revoke');
+
+        // Integrations & Media (Meetings & Videos)
+        Route::get('/meetings', [MeetingController::class, 'index'])->middleware('tenant.can:meetings.view')->name('api.meetings.index');
+        Route::post('/meetings', [MeetingController::class, 'store'])->middleware('tenant.can:meetings.create')->name('api.meetings.create');
+        Route::get('/meetings/{id}', [MeetingController::class, 'show'])->middleware('tenant.can:meetings.view')->name('api.meetings.show');
+        Route::get('/meetings/{id}/join', [MeetingController::class, 'joinUrl'])->middleware('tenant.can:meetings.view')->name('api.meetings.join');
+        Route::post('/meetings/{id}/cancel', [MeetingController::class, 'cancel'])->middleware('tenant.can:meetings.manage')->name('api.meetings.cancel');
+
+        Route::get('/media', [MediaController::class, 'index'])->middleware('tenant.can:media.view')->name('api.media.index');
+        Route::post('/media', [MediaController::class, 'store'])->middleware('tenant.can:media.upload')->name('api.media.upload');
+        Route::get('/media/{id}', [MediaController::class, 'show'])->middleware('tenant.can:media.view')->name('api.media.show');
+        Route::get('/media/{id}/embed', [MediaController::class, 'embedUrl'])->middleware('tenant.can:media.view')->name('api.media.embed');
     });
+
+    // Provider Webhooks (authenticated via webhook signature verification)
+    Route::post('/integrations/webhooks/{provider}', [WebhookController::class, 'handle'])->name('api.integrations.webhook');
 });
