@@ -1,7 +1,7 @@
 # Current Project State
 
 Planning/documentation phases A–K have been approved.
-Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), M3 (Identity / Authentication / Authorization), M4 (Education Core), M5 (Classroom & Attendance Core), M6 (Assessment Domain), and M7 (Billing, Packages & Entitlements) have been successfully implemented and verified.
+Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), M3 (Identity / Authentication / Authorization), M4 (Education Core), M5 (Classroom & Attendance Core), M6 (Assessment Domain), M7 (Billing, Packages & Entitlements), and M8 (Credentials & Devices) have been successfully implemented and verified.
 
 ## Current Mode
 
@@ -9,12 +9,12 @@ IMPLEMENTATION MODE
 
 ## Current Milestone
 
-M7 — Billing, Packages & Entitlements (VERIFIED)  
-Next Milestone: M8 — Credentials & Devices
+M8 — Credentials & Devices (VERIFIED)  
+Next Milestone: M9 — Integrations & Media Abstraction
 
 ## Current Task
 
-M7-001 — Billing, Packages & Entitlements: Packages, Package Entitlements, Payment Requests, Payment Proof, Payment Review & Approval, Audit Logs, Subscription Activation, Entitlement Grants, and Billing Gate. (COMPLETED & VERIFIED)
+M8-001 — Credentials & Devices: Access Credentials, SHA-256 Secret Hashing, Device Binding, Second Device Policy, Authorized Device Replacement, Credential Lifecycle, and Credential Gate. (COMPLETED & VERIFIED)
 
 ## Completed
 
@@ -70,28 +70,28 @@ M7-001 — Billing, Packages & Entitlements: Packages, Package Entitlements, Pay
     - `Payment ≠ Subscription`
     - `Subscription ≠ Entitlement`
     - `Payment Approval ≠ Authentication`
-    - No `student.is_paid` shortcut column
+    - No `student.is_paid` shortcut column; student capabilities checked via `hasEntitlement()`
   - Controllers: `PackageController`, `PaymentRequestController`, `SubscriptionController`, `EntitlementController`
-  - Billing Gate verified in `BillingGateTest` (Phase J §33):
-    - Commercial package creation with entitlement mappings
-    - Student payment request submission (`pending`)
-    - Review list and details retrieval
-    - Wrong reviewer authorization check (`403 FORBIDDEN`)
-    - Payment request approval with reviewer attribution
-    - Subscription activation and entitlement granting
-    - Verification that student holds active entitlements (`hasEntitlement()`)
-    - Immutable audit log written to `payment_review_logs`
-    - Duplicate approval prevention (`422 ALREADY_PROCESSED`)
-    - Payment request rejection with reason logging
-    - Cross-tenant payment request isolation (`404` and `401`)
+  - Billing Gate verified in `BillingGateTest` (Phase J §33)
+- **M8-001 Credentials & Devices**:
+  - Tenant database migration for `access_credentials`, `device_bindings`, and `device_change_logs`
+  - Eloquent domain models: `AccessCredential`, `DeviceBinding`, `DeviceChangeLog`
+  - Invariants strictly enforced:
+    - Raw secret hashed (SHA-256); secret never stored in plain text or logged
+    - Secret hash hidden from model serialization
+    - Single active device binding per credential
+    - Second device policy enforced (`403 SECOND_DEVICE_PROHIBITED`)
+    - Authorized device replacement with immutable audit record in `device_change_logs`
+    - Full lifecycle states (`pending`, `active`, `suspended`, `revoked`, `expired`)
+  - Controllers: `CredentialController`
+  - Credential Gate verified in `CredentialGateTest` (Phase J §37)
 
 ## In Progress
 
-- Preparation for M8 (Credentials & Devices: Student Access Credentials, Code/Barcode Generation, Device Binding, Device Replacement, Credential Gate)
+- Preparation for M9 (Integrations & Media Abstraction: Meeting Providers, Video Providers, Storage Adapters, Integration Gate)
 
 ## Pending
 
-- M8 Credentials / Devices
 - M9 Integrations
 - M10 Analytics / Reporting
 - M11 Full Frontend
@@ -105,7 +105,7 @@ None.
 
 ## Verification Evidence
 
-- Backend Tests: `vendor/bin/phpunit` -> 21 tests, 253 assertions passed (BillingGateTest, AssessmentGateTest, AttendanceGateTest, EducationGateTest, IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
+- Backend Tests: `vendor/bin/phpunit` -> 22 tests, 288 assertions passed (CredentialGateTest, BillingGateTest, AssessmentGateTest, AttendanceGateTest, EducationGateTest, IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
 - Backend Linter: `vendor/bin/pint --test` -> Passed (0 violations)
 - Frontend Types: `npx tsc --noEmit` -> Passed (0 errors)
 - Frontend Linter: `npm run lint` -> Passed (0 errors)

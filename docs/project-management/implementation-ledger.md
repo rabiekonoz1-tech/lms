@@ -10,5 +10,6 @@
 | M5-001 | M5 | VERIFIED | AI Agent | Passed (PHPUnit: 19 tests, 181 assertions; Pint: Pass; ESLint: Pass; TSC: Pass) | Updated | Classroom & Attendance: Branches, Classrooms, Classes, Sessions, Attendance Records, QR Scan, Report, Attendance Gate Verified (Phase J §27) |
 | M6-001 | M6 | VERIFIED | AI Agent | Passed (PHPUnit: 20 tests, 220 assertions; Pint: Pass; ESLint: Pass; TSC: Pass) | Updated | Assessment Domain: Assignments, Submissions, Late Tracking, Exams, Questions, Attempts, Grades, Assessment Gate Verified (Phase J §30) |
 | M7-001 | M7 | VERIFIED | AI Agent | Passed (PHPUnit: 21 tests, 253 assertions; Pint: Pass; ESLint: Pass; TSC: Pass) | Updated | Billing & Entitlements: Packages, Payment Requests, Review, Subscriptions, Entitlements, Audit, Billing Gate Verified (Phase J §33) |
+| M8-001 | M8 | VERIFIED | AI Agent | Passed (PHPUnit: 22 tests, 288 assertions; Pint: Pass; ESLint: Pass; TSC: Pass) | Updated | Credentials & Devices: Access Credentials, Secret Hashing, Device Binding, Replacement, Credential Gate Verified (Phase J §37) |
 
 Use this file as the authoritative implementation memory.

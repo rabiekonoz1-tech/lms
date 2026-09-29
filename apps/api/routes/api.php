@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Billing\EntitlementController;
 use App\Http\Controllers\Api\Billing\PackageController;
 use App\Http\Controllers\Api\Billing\PaymentRequestController;
 use App\Http\Controllers\Api\Billing\SubscriptionController;
+use App\Http\Controllers\Api\Credential\CredentialController;
 use App\Http\Controllers\Api\Education\CourseController;
 use App\Http\Controllers\Api\Education\EnrollmentController;
 use App\Http\Controllers\Api\Education\LessonController;
@@ -159,5 +160,19 @@ Route::middleware('tenant')->group(function () {
         // Billing - Subscriptions & Entitlements
         Route::get('/students/{studentId}/subscriptions', [SubscriptionController::class, 'index'])->name('api.students.subscriptions');
         Route::get('/students/{studentId}/entitlements', [EntitlementController::class, 'index'])->name('api.students.entitlements');
+
+        // Credentials & Devices
+        Route::get('/students/{studentId}/credentials', [CredentialController::class, 'index'])->name('api.credentials.index');
+        Route::post('/credentials', [CredentialController::class, 'store'])
+            ->middleware('tenant.can:credentials.create')
+            ->name('api.credentials.store');
+        Route::post('/credentials/{id}/activate', [CredentialController::class, 'activate'])->name('api.credentials.activate');
+        Route::post('/credentials/verify', [CredentialController::class, 'verify'])->name('api.credentials.verify');
+        Route::post('/credentials/{id}/replace-device', [CredentialController::class, 'replaceDevice'])
+            ->middleware('tenant.can:credentials.manage_devices')
+            ->name('api.credentials.replace_device');
+        Route::post('/credentials/{id}/revoke', [CredentialController::class, 'revoke'])
+            ->middleware('tenant.can:credentials.revoke')
+            ->name('api.credentials.revoke');
     });
 });

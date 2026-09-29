@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [M8-001] - 2026-09-29
+### Added
+- Credentials & Devices Domain:
+  - Tenant database migration for `access_credentials`, `device_bindings`, and `device_change_logs` tables
+  - Eloquent domain models: `AccessCredential`, `DeviceBinding`, and `DeviceChangeLog`
+  - Invariants strictly enforced:
+    - Raw secret hashed using SHA-256; secret never stored in plain text or logged
+    - Secret hash hidden from model serialization (`$hidden = ['secret_hash']`)
+    - Single active device binding per credential (second device policy enforced)
+    - Device replacement requires administrative authorization and audit log
+    - Strict cross-tenant credential isolation
+  - Controllers:
+    - `CredentialController`: Issuance (with one-time plain-text secret return), activation, device-bound verification, authorized device replacement, and revocation
+  - Credential Gate verified in `CredentialGateTest` (Phase J §37):
+    - Raw secret hashed and verified
+    - Secret hidden from serialization and logs
+    - Activation transitions status to active
+    - Device binding recorded on activation
+    - Second device access prohibited (`403 SECOND_DEVICE_PROHIBITED`)
+    - Device replacement authorized and audited in `device_change_logs`
+    - Revocation prohibits verification (`403 CREDENTIAL_REVOKED`)
+    - Expired credential rejected (`403 CREDENTIAL_EXPIRED`)
+    - Cross-tenant credential access rejected (404 and 401)
+  - Suite: 22 tests, 288 assertions passed (100% pass)
+- Documentation updates:
+  - `docs/domains/credentials/README.md`
+  - `docs/backend/README.md`
+  - `docs/project-management/current-state.md`
+  - `docs/project-management/implementation-ledger.md`
+
 ## [M7-001] - 2026-09-29
 ### Added
 - Billing, Packages & Entitlements Domain:

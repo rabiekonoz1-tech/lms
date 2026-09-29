@@ -132,7 +132,26 @@ apps/api/
 
 ---
 
-## 7. Identity, Authentication & Authorization (M3)
+## 7. Credentials & Devices Domain (M8)
+
+- **Domain Models (Tenant Database)**:
+  - `AccessCredential`: Persistent student credential with hashed secret (`secret_hash`), QR payload, and state machine (`pending`, `active`, `suspended`, `revoked`, `expired`).
+  - `DeviceBinding`: Active hardware binding linking credential to `device_id` and `device_fingerprint`.
+  - `DeviceChangeLog`: Immutable audit trail of authorized device replacement actions.
+- **Invariants Enforced**:
+  - Raw secret hashed with SHA-256; never stored in plain text or logged
+  - Secret hash hidden from model serialization
+  - Single active device binding per credential (second device policy enforced)
+  - Device replacement requires administrative authorization and audit log
+  - `Failures default to deny` (SEC-INV-009)
+  - Strict cross-tenant isolation (SEC-INV-001)
+- **Controllers**:
+  - `App\Http\Controllers\Api\Credential\CredentialController`
+- **Credential Gate Verified**: Proven via `CredentialGateTest` (raw secret hashed, secret not logged, activation, device binding, second device access prohibited, device replacement with audit, revocation, expiration, and cross-tenant credential rejection).
+
+---
+
+## 8. Identity, Authentication & Authorization (M3)
 
 - **Global Student Identity**: Control plane model (`GlobalIdentity`) linking across tenants via `StudentIdentityLink`.
 - **Invariants Enforced**:
@@ -146,7 +165,7 @@ apps/api/
 
 ---
 
-## 8. Tenancy Foundation (M2)
+## 9. Tenancy Foundation (M2)
 
 - **Control Plane**: Manages tenant registry, domain mappings, feature flags, and database allocation.
 - **Dynamic Database Switching**: Managed by `App\Tenancy\TenantDatabaseManager` via connection `'tenant'`.
@@ -156,14 +175,14 @@ apps/api/
 
 ---
 
-## 9. Runtime Foundation & API Contracts (M1)
+## 10. Runtime Foundation & API Contracts (M1)
 
-### 9.1 Request Correlation
+### 10.1 Request Correlation
 - Every incoming request through `RequestCorrelationMiddleware` is assigned a unique `request_id` (propagating an existing `X-Request-ID` header or generating a UUIDv4).
 - The `request_id` is bound to the request attributes and injected into the logging context (`Log::withContext(['request_id' => ...])`).
 - The `request_id` is returned in the `X-Request-ID` response header and inside the `meta.request_id` envelope.
 
-### 9.2 Response & Error Envelope
+### 10.2 Response & Error Envelope
 All API endpoints under `/api/v1` return standardized JSON envelopes matching the approved Phase F specification:
 
 **Success**:
@@ -192,7 +211,7 @@ All API endpoints under `/api/v1` return standardized JSON envelopes matching th
 }
 ```
 
-### 9.3 Centralized Exception Handling
+### 10.3 Centralized Exception Handling
 Configured in `bootstrap/app.php`:
 - `TenantNotFoundException` → 404 `TENANT_NOT_FOUND`
 - `TenantInactiveException` → 403 `TENANT_INACTIVE`
@@ -204,14 +223,14 @@ Configured in `bootstrap/app.php`:
 - `ThrottleRequestsException` → 429 `RATE_LIMIT_EXCEEDED`
 - `Throwable` → 500 `INTERNAL_SERVER_ERROR` (hides internals unless `APP_DEBUG=true`)
 
-### 9.4 Health Check Endpoint
+### 10.4 Health Check Endpoint
 - **URL**: `GET /api/v1/health`
 - **Controller**: `App\Http\Controllers\Api\HealthCheckController`
 - **Output**: Reports database and cache connectivity, application version, and environment.
 
 ---
 
-## 10. Verification & Development Commands
+## 11. Verification & Development Commands
 
 From `apps/api/`:
 

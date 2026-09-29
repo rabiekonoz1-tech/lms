@@ -68,6 +68,11 @@ class Student extends TenantModel
         return $this->hasMany(Entitlement::class, 'student_id');
     }
 
+    public function accessCredentials(): HasMany
+    {
+        return $this->hasMany(AccessCredential::class, 'student_id');
+    }
+
     /**
      * Check if student currently holds a valid, active entitlement for a specific key.
      */
