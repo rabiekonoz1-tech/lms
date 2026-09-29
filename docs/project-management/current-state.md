@@ -1,7 +1,7 @@
 # Current Project State
 
 Planning/documentation phases A–K have been approved.
-Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), M3 (Identity / Authentication / Authorization), M4 (Education Core), M5 (Classroom & Attendance Core), M6 (Assessment Domain), M7 (Billing, Packages & Entitlements), M8 (Credentials & Devices), M9 (Integrations & Media Abstraction), and M10 (Analytics & Reporting) have been successfully implemented and verified.
+Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), M3 (Identity / Authentication / Authorization), M4 (Education Core), M5 (Classroom & Attendance Core), M6 (Assessment Domain), M7 (Billing, Packages & Entitlements), M8 (Credentials & Devices), M9 (Integrations & Media Abstraction), M10 (Analytics & Reporting), and M11 (Frontend Foundation & Core Integration) have been successfully implemented and verified.
 
 ## Current Mode
 
@@ -9,12 +9,12 @@ IMPLEMENTATION MODE
 
 ## Current Milestone
 
-M10 — Analytics & Reporting (VERIFIED)  
-Next Milestone: M11 — Frontend Foundation & Core Integration
+M11 — Frontend Foundation & Core Integration (VERIFIED)  
+Next Milestone: M12 — Full System Verification & End-to-End Gates
 
 ## Current Task
 
-M10-001 — Analytics & Reporting: Metric Definitions, Metric Versioning, Time-series Measurements, Pre-aggregated Read Model Snapshots, Historical Stability, Fast Dashboard Serving, Asynchronous Report Instances, Failure Handling, Download Authorization, and Analytics/Reporting Gates. (COMPLETED & VERIFIED)
+M11-001 — Frontend Foundation & Core Integration: Next.js 16 App Router shell, Tenant & Auth contexts, RTL-first responsive design, role personas (Student, Teacher, Parent), Courses Explorer, Attendance Marking, Assessment Submissions, Virtual Classrooms Hub, Analytics & Reporting Center, and Device Credential views. (COMPLETED & VERIFIED)
 
 ## Completed
 
@@ -109,14 +109,21 @@ M10-001 — Analytics & Reporting: Metric Definitions, Metric Versioning, Time-s
     - Graceful failure handling and lifecycle tracking for asynchronous report jobs
   - Controllers: `MetricController`, `DashboardController`, `ReportController`
   - Analytics & Reporting Gates verified in `AnalyticsAndReportingGateTest` (Phase J §45 and §47)
+- **M11-001 Frontend Foundation & Core Integration**:
+  - Pure SVG icon system (`apps/web/src/components/icons/index.tsx`)
+  - UI component primitives: `Button`, `Badge`, `Card`
+  - React contexts: `TenantContext` (multi-tenant live switching), `AuthContext` (role persona switcher)
+  - Application shell: `Navbar` (brand, tenant badge, user menu, RTL layout), `Sidebar` (role-filtered dynamic navigation)
+  - Role-specific dashboards: `StudentDashboard`, `TeacherDashboard`, `ParentDashboard`
+  - Feature domain views: `CourseExplorer`, `AttendanceView`, `AssessmentView`, `MeetingsHub`, `AnalyticsHub`, `ReportsHub`, `CredentialsHub`
+  - Strict TypeScript strictness across Next.js 16 App Router and Tailwind CSS v4 design system
 
 ## In Progress
 
-- Preparation for M11 (Frontend Foundation & Core Integration: Next.js 16 App Router, Authentication State, Tenant Context, Education & Dashboard Views)
+- Preparation for M12 (Full System Verification & End-to-End Gates: Cross-domain integration tests, security boundaries, multi-tenant isolation, and automated gate suite)
 
 ## Pending
 
-- M11 Full Frontend Integration
 - M12 Full System Verification
 - M13 Production Hardening
 - M14 Production Readiness
@@ -131,3 +138,4 @@ None.
 - Backend Linter: `vendor/bin/pint --test` -> Passed (0 violations)
 - Frontend Types: `npx tsc --noEmit` -> Passed (0 errors)
 - Frontend Linter: `npm run lint` -> Passed (0 errors)
+- Frontend Production Build: `npm run build` -> Passed (Next.js 16.3.7 Turbopack static & dynamic pages generated successfully)

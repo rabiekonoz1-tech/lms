@@ -65,8 +65,49 @@ npm run build
 
 ---
 
-## 5. UI/UX Principles
-- **RTL-First**: Default text direction is right-to-left (`dir="rtl"`) for Arabic interfaces.
-- **Typography**: IBM Plex Sans Arabic as primary typeface.
-- **Theming**: Light and Dark mode support with curated accessible palettes.
-- **Security**: Frontend authentication checks are UI state helpers only; security boundaries are strictly enforced on the backend.
+## 5. Architecture & Components (M11)
+
+### 5.1 Contexts & State Providers
+- **`TenantContext` (`src/context/tenant-context.tsx`)**:
+  - Manages active tenant slug and metadata.
+  - Syncs `X-Tenant` header with `apiClient`.
+  - Supports live tenant switching for multi-tenant exploration.
+- **`AuthContext` (`src/context/auth-context.tsx`)**:
+  - Manages role personas (`student`, `teacher`, `parent`, `admin`).
+  - Enforces invariant: *Frontend authorization is UI feedback only; backend security gate is authoritative*.
+
+### 5.2 Application Shell & Layout
+- **`Navbar` (`src/components/layout/navbar.tsx`)**:
+  - RTL-first navigation header with active tenant status badge, tenant switcher, role persona switcher, and user identity indicator.
+- **`Sidebar` (`src/components/layout/sidebar.tsx`)**:
+  - Role-aware navigation drawer displaying module links dynamically based on active role permissions.
+
+### 5.3 Role-Based Dashboards & Feature Views
+- **Student Dashboard (`src/components/dashboard/student-dashboard.tsx`)**:
+  - Academic progress, active courses, upcoming assignments & exams, and recent attendance summaries.
+- **Teacher Dashboard (`src/components/dashboard/teacher-dashboard.tsx`)**:
+  - Classroom rosters, grading queues, scheduled live lectures, and attendance entry shortcuts.
+- **Parent Dashboard (`src/components/dashboard/parent-dashboard.tsx`)**:
+  - Multi-child progress monitoring, fee payments & subscription status, attendance cards, and teacher notes.
+- **Courses & Lessons (`src/components/courses/course-explorer.tsx`)**:
+  - Course curriculum browser with lesson status, durations, and multi-tenant content isolation.
+- **Classroom Attendance (`src/components/attendance/attendance-view.tsx`)**:
+  - Session roster and interactive attendance marking (`present`, `absent`, `late`, `excused`).
+- **Assessments & Grading (`src/components/assessment/assessment-view.tsx`)**:
+  - Assignment submissions and timed quiz/exam interfaces with score tracking.
+- **Virtual Classrooms (`src/components/meetings/meetings-hub.tsx`)**:
+  - Google Meet, Zoom, and Mock provider integration display with direct join actions.
+- **Academic Analytics (`src/components/analytics/analytics-hub.tsx`)**:
+  - Pre-aggregated snapshot visualizer (`no synchronous heavy calculation on dashboard`).
+- **Reporting Center (`src/components/reports/reports-hub.tsx`)**:
+  - Asynchronous report generation, export, and authenticated download logs.
+- **Security & Devices (`src/components/credentials/credentials-hub.tsx`)**:
+  - Hardware device binding management, SHA-256 credential hashing badges, and active session controls.
+
+---
+
+## 6. UI/UX Principles
+- **RTL-First**: Default text direction is right-to-left (`dir="rtl"`) with modern Tajawal and IBM Plex typography.
+- **Design Tokens**: Dark glassmorphic aesthetic (`slate-950/80`, emerald accents, indigo/purple role cues).
+- **Security Invariant**: Frontend authentication checks are UI state helpers only; security boundaries are strictly enforced on the backend.
+

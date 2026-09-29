@@ -13,5 +13,7 @@
 | M8-001 | M8 | VERIFIED | AI Agent | Passed (PHPUnit: 22 tests, 288 assertions; Pint: Pass; ESLint: Pass; TSC: Pass) | Updated | Credentials & Devices: Access Credentials, Secret Hashing, Device Binding, Replacement, Credential Gate Verified (Phase J §37) |
 | M9-001 | M9 | VERIFIED | AI Agent | Passed (PHPUnit: 23 tests, 321 assertions; Pint: Pass; ESLint: Pass; TSC: Pass) | Updated | Integrations & Media Abstraction: Meeting & Video Providers, Failover, Webhook Verification, Idempotency, Media / Meeting Gate Verified (Phase J §40) |
 | M10-001 | M10 | VERIFIED | AI Agent | Passed (PHPUnit: 25 tests, 347 assertions; Pint: Pass; ESLint: Pass; TSC: Pass) | Updated | Analytics & Reporting: Metric Definitions, Metric Versioning, Time-series Measurements, Read Model Snapshots, Historical Stability, Asynchronous Reports, Analytics/Reporting Gates Verified (Phase J §45 and §47) |
+| M11-001 | M11 | VERIFIED | AI Agent | Passed (ESLint: 0 errors; TSC: 0 errors; Next.js 16 App Router Turbopack Build: Pass; PHPUnit: 25 tests, 347 assertions) | Updated | Frontend Foundation & Core Integration: Next.js 16 App Router, Tenant & Auth Contexts, RTL Dashboards (Student, Teacher, Parent), Views for Courses, Attendance, Assessments, Virtual Classrooms, Analytics & Reports |
 
 Use this file as the authoritative implementation memory.
+

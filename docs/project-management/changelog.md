@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [M11-001] - 2026-09-30
+### Added
+- Frontend Foundation & Core Integration (Stream 18, Phase J §52–§55):
+  - Comprehensive TypeScript domain interfaces matching backend models (`apps/web/src/types/index.ts`)
+  - Pure SVG vector icon library (`apps/web/src/components/icons/index.tsx`)
+  - UI Primitive component library (`Button`, `Badge`, `Card`)
+  - Multi-tenant client context with live tenant switching & `X-Tenant` header synchronization (`TenantContext`)
+  - Role-based persona context (`AuthContext`) with dynamic role switching (`student`, `teacher`, `parent`, `admin`)
+  - Responsive RTL-first Application Shell:
+    - `Navbar`: Tenant brand, health indicator, tenant switcher, role persona picker, user profile indicator
+    - `Sidebar`: Dynamic role-permission filtering of navigation routes with badge highlights
+  - Role-specific dynamic dashboards:
+    - `StudentDashboard`: Academic metric cards, upcoming deadlines, enrolled courses, quick shortcuts
+    - `TeacherDashboard`: Classroom rosters, grading queues, live session launcher, quick attendance
+    - `ParentDashboard`: Multi-child switcher, children academic cards, tuition payment status, teacher notes
+  - Feature domain views:
+    - `CourseExplorer`: Curriculum viewer with lesson breakdown, duration, and status
+    - `AttendanceView`: Live session roster and student attendance status toggling
+    - `AssessmentView`: Assignments, exam submission tabs, scoring and pass/fail indicators
+    - `MeetingsHub`: Virtual classroom hub for Google Meet, Zoom, and Mock adapters with instant join buttons
+    - `AnalyticsHub`: Pre-aggregated read model visualization (`no heavy synchronous table scans`)
+    - `ReportsHub`: Asynchronous report compilation, status tracking, and download actions
+    - `CredentialsHub`: Hardware device binding management, SHA-256 hidden hash indicator, and session security
+  - Strict TypeScript 5 strict mode and ESLint 9 compliance (0 errors, 0 warnings)
+  - Next.js 16 App Router Turbopack optimized production build verified
+- Documentation updates:
+  - `docs/frontend/README.md`
+  - `docs/project-management/current-state.md`
+  - `docs/project-management/implementation-ledger.md`
+
 ## [M10-001] - 2026-09-30
 ### Added
 - Analytics & Reporting Domain:
