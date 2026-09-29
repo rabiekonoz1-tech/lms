@@ -1,0 +1,11 @@
+# Add framework-specific ignores during M0.
+.env
+.env.*
+!.env.example
+node_modules/
+vendor/
+.next/
+dist/
+build/
+coverage/
+storage/logs/
