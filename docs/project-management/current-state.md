@@ -1,7 +1,7 @@
 # Current Project State
 
 Planning/documentation phases A–K have been approved.
-Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), M3 (Identity / Authentication / Authorization), M4 (Education Core), M5 (Classroom & Attendance Core), M6 (Assessment Domain), M7 (Billing, Packages & Entitlements), and M8 (Credentials & Devices) have been successfully implemented and verified.
+Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), M3 (Identity / Authentication / Authorization), M4 (Education Core), M5 (Classroom & Attendance Core), M6 (Assessment Domain), M7 (Billing, Packages & Entitlements), M8 (Credentials & Devices), M9 (Integrations & Media Abstraction), and M10 (Analytics & Reporting) have been successfully implemented and verified.
 
 ## Current Mode
 
@@ -9,12 +9,12 @@ IMPLEMENTATION MODE
 
 ## Current Milestone
 
-M9 — Integrations & Media Abstraction (VERIFIED)  
-Next Milestone: M10 — Analytics & Reporting (Stream 14)
+M10 — Analytics & Reporting (VERIFIED)  
+Next Milestone: M11 — Frontend Foundation & Core Integration
 
 ## Current Task
 
-M9-001 — Integrations & Media Abstraction: Meeting Provider Abstraction (Google Meet, Zoom, Mock), Video Provider Abstraction (Vimeo, Google Drive, Mock), Provider Failover & Timeout Handling, External ID Mapping, Webhook Signature Verification, Idempotency, and Media / Meeting Gate. (COMPLETED & VERIFIED)
+M10-001 — Analytics & Reporting: Metric Definitions, Metric Versioning, Time-series Measurements, Pre-aggregated Read Model Snapshots, Historical Stability, Fast Dashboard Serving, Asynchronous Report Instances, Failure Handling, Download Authorization, and Analytics/Reporting Gates. (COMPLETED & VERIFIED)
 
 ## Completed
 
@@ -98,14 +98,24 @@ M9-001 — Integrations & Media Abstraction: Meeting Provider Abstraction (Googl
     - Strict cross-tenant isolation
   - Controllers: `MeetingController`, `MediaController`, `WebhookController`
   - Media / Meeting Gate verified in `IntegrationGateTest` (Phase J §40)
+- **M10-001 Analytics & Reporting**:
+  - Tenant database migration for `metric_definitions`, `metric_versions`, `metric_measurements`, `student_analytics_snapshots`, `report_definitions`, and `report_instances`
+  - Eloquent domain models: `MetricDefinition`, `MetricVersion`, `MetricMeasurement`, `StudentAnalyticsSnapshot`, `ReportDefinition`, `ReportInstance`
+  - Invariants strictly enforced:
+    - No synchronous heavy calculation on dashboard queries (`StudentAnalyticsSnapshot` fast read model)
+    - Metric versioning ensures historical measurements remain stable when formulas change
+    - Accurate calculation of attendance rate, assignment completion rate, and exam averages
+    - Strict tenant isolation and data scope authorization on report downloads
+    - Graceful failure handling and lifecycle tracking for asynchronous report jobs
+  - Controllers: `MetricController`, `DashboardController`, `ReportController`
+  - Analytics & Reporting Gates verified in `AnalyticsAndReportingGateTest` (Phase J §45 and §47)
 
 ## In Progress
 
-- Preparation for M10 (Analytics & Reporting: Stream 14, Attendance/Academic/Financial Reporting, Asynchronous Processing)
+- Preparation for M11 (Frontend Foundation & Core Integration: Next.js 16 App Router, Authentication State, Tenant Context, Education & Dashboard Views)
 
 ## Pending
 
-- M10 Analytics & Reporting
 - M11 Full Frontend Integration
 - M12 Full System Verification
 - M13 Production Hardening
@@ -117,7 +127,7 @@ None.
 
 ## Verification Evidence
 
-- Backend Tests: `vendor/bin/phpunit` -> 23 tests, 321 assertions passed (IntegrationGateTest, CredentialGateTest, BillingGateTest, AssessmentGateTest, AttendanceGateTest, EducationGateTest, IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
+- Backend Tests: `vendor/bin/phpunit` -> 25 tests, 347 assertions passed (AnalyticsAndReportingGateTest, IntegrationGateTest, CredentialGateTest, BillingGateTest, AssessmentGateTest, AttendanceGateTest, EducationGateTest, IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
 - Backend Linter: `vendor/bin/pint --test` -> Passed (0 violations)
 - Frontend Types: `npx tsc --noEmit` -> Passed (0 errors)
 - Frontend Linter: `npm run lint` -> Passed (0 errors)

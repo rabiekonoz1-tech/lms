@@ -176,7 +176,29 @@ apps/api/
 
 ---
 
-## 9. Identity, Authentication & Authorization (M3)
+## 9. Analytics & Reporting Domain (M10)
+
+- **Domain Models (Tenant Database)**:
+  - `MetricDefinition`: Keyed performance metric with category, current version, formula, and creator reference.
+  - `MetricVersion`: Versioned calculation definitions supporting historical measurement stability.
+  - `MetricMeasurement`: Time-series student measurement record linked to specific metric version.
+  - `StudentAnalyticsSnapshot`: Pre-aggregated read model serving dashboards without synchronous computation.
+  - `ReportDefinition`: Supported report types (`student_transcript`, `attendance_summary`, `academic`).
+  - `ReportInstance`: Asynchronous report request with state tracking (`queued`, `processing`, `completed`, `failed`), parameters, payload, and file path.
+- **Invariants Enforced**:
+  - No synchronous heavy calculation on dashboard queries (served via pre-aggregated read models)
+  - Metric versioning ensures historical measurements remain stable when formulas change
+  - Strict tenant isolation and data scope authorization on report downloads
+  - Failures default to deny (SEC-INV-009)
+- **Controllers**:
+  - `App\Http\Controllers\Api\Analytics\MetricController`
+  - `App\Http\Controllers\Api\Analytics\DashboardController`
+  - `App\Http\Controllers\Api\Reporting\ReportController`
+- **Analytics & Reporting Gates Verified**: Proven via `AnalyticsAndReportingGateTest` (Phase J §45 Analytics Gate: correct tenant, correct student, correct metric version, correct calculation, historical stability, fast read model serving; Phase J §47 Reporting Gate: report generation, job tracking, failure handling, tenant isolation, download authorization).
+
+---
+
+## 10. Identity, Authentication & Authorization (M3)
 
 - **Global Student Identity**: Control plane model (`GlobalIdentity`) linking across tenants via `StudentIdentityLink`.
 - **Invariants Enforced**:

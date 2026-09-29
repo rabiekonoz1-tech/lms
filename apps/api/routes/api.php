@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\Analytics\DashboardController;
+use App\Http\Controllers\Api\Analytics\MetricController;
 use App\Http\Controllers\Api\Assessment\AssignmentController;
 use App\Http\Controllers\Api\Assessment\ExamController;
 use App\Http\Controllers\Api\Assessment\GradeController;
@@ -22,6 +24,7 @@ use App\Http\Controllers\Api\HealthCheckController;
 use App\Http\Controllers\Api\Integration\MediaController;
 use App\Http\Controllers\Api\Integration\MeetingController;
 use App\Http\Controllers\Api\Integration\WebhookController;
+use App\Http\Controllers\Api\Reporting\ReportController;
 use App\Http\Controllers\Api\TenantCurrentController;
 use Illuminate\Support\Facades\Route;
 
@@ -189,6 +192,22 @@ Route::middleware('tenant')->group(function () {
         Route::post('/media', [MediaController::class, 'store'])->middleware('tenant.can:media.upload')->name('api.media.upload');
         Route::get('/media/{id}', [MediaController::class, 'show'])->middleware('tenant.can:media.view')->name('api.media.show');
         Route::get('/media/{id}/embed', [MediaController::class, 'embedUrl'])->middleware('tenant.can:media.view')->name('api.media.embed');
+
+        // Analytics - Metrics & Dashboards
+        Route::get('/metrics', [MetricController::class, 'index'])->middleware('tenant.can:analytics.view')->name('api.metrics.index');
+        Route::post('/metrics', [MetricController::class, 'store'])->middleware('tenant.can:analytics.manage')->name('api.metrics.store');
+        Route::get('/metrics/{id}', [MetricController::class, 'show'])->middleware('tenant.can:analytics.view')->name('api.metrics.show');
+        Route::post('/metrics/{id}/versions', [MetricController::class, 'addVersion'])->middleware('tenant.can:analytics.manage')->name('api.metrics.add_version');
+        Route::get('/students/{studentId}/dashboard', [DashboardController::class, 'studentDashboard'])->name('api.students.dashboard');
+        Route::post('/students/{studentId}/dashboard/refresh', [DashboardController::class, 'refresh'])
+            ->middleware('tenant.can:analytics.manage')
+            ->name('api.students.dashboard.refresh');
+
+        // Reporting - Instances & Generation
+        Route::get('/reports', [ReportController::class, 'index'])->name('api.reports.index');
+        Route::post('/reports', [ReportController::class, 'store'])->middleware('tenant.can:reports.generate')->name('api.reports.store');
+        Route::get('/reports/{id}', [ReportController::class, 'show'])->name('api.reports.show');
+        Route::get('/reports/{id}/download', [ReportController::class, 'download'])->name('api.reports.download');
     });
 
     // Provider Webhooks (authenticated via webhook signature verification)

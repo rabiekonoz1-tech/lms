@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [M10-001] - 2026-09-30
+### Added
+- Analytics & Reporting Domain:
+  - Tenant database migration for `metric_definitions`, `metric_versions`, `metric_measurements`, `student_analytics_snapshots`, `report_definitions`, and `report_instances`
+  - Eloquent domain models:
+    - `MetricDefinition`: Keyed performance metric with versioning, category, and formula specification
+    - `MetricVersion`: Versioned calculation definition preserving historical measurement interpretability
+    - `MetricMeasurement`: Time-series individual student measurement referencing specific metric version
+    - `StudentAnalyticsSnapshot`: Pre-aggregated read model serving fast dashboards without live scanning
+    - `ReportDefinition`: Supported report definitions (`student_transcript`, `attendance_summary`, `academic`)
+    - `ReportInstance`: Asynchronous report request tracking status (`queued`, `processing`, `completed`, `failed`), parameters, and file path
+  - Domain Services:
+    - `AnalyticsCalculationService`: Computes accurate attendance rates, assignment completion rates, exam averages, and weighted composite scores; records discrete measurements and updates fast read models
+    - `ReportGenerationService`: Processes asynchronous report compilation jobs with structured JSON/CSV payloads and failure simulation handling
+  - Controllers:
+    - `MetricController`: Index, store (creates version 1 automatically), show, addVersion (upgrades version with changelog)
+    - `DashboardController`: studentDashboard (fast read model serving), refresh (on-demand re-computation)
+    - `ReportController`: Index, store (queued report creation and compilation), show, download (enforces download authorization)
+  - Gates Verified in `AnalyticsAndReportingGateTest`:
+    - Phase J §45 Analytics Gate:
+      - Correct tenant isolation
+      - Correct student mapping
+      - Correct metric versioning
+      - Accurate metric calculation
+      - Historical measurement stability when definitions upgrade
+      - Fast read model serving without synchronous heavy table scanning
+    - Phase J §47 Reporting Gate:
+      - Asynchronous report generation
+      - Lifecycle job tracking
+      - Graceful error/failure handling
+      - Strict cross-tenant isolation
+      - Download authorization enforcement
+  - Suite: 25 tests, 347 assertions passed (100% pass)
+- Documentation updates:
+  - `docs/domains/analytics/README.md`
+  - `docs/domains/reporting/README.md`
+  - `docs/backend/README.md`
+  - `docs/project-management/current-state.md`
+  - `docs/project-management/implementation-ledger.md`
+
 ## [M9-001] - 2026-09-30
 ### Added
 - Integrations & Media Abstraction Domain:
