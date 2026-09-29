@@ -40,4 +40,16 @@ class Student extends TenantModel
             ->withPivot(['id', 'status', 'enrolled_at', 'completed_at'])
             ->withTimestamps();
     }
+
+    public function classes(): BelongsToMany
+    {
+        return $this->belongsToMany(SchoolClass::class, 'class_students', 'student_id', 'class_id')
+            ->withPivot(['id', 'status', 'enrolled_at'])
+            ->withTimestamps();
+    }
+
+    public function attendanceRecords(): HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class, 'student_id');
+    }
 }

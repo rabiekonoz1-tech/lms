@@ -1,7 +1,7 @@
 # Current Project State
 
 Planning/documentation phases A–K have been approved.
-Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), M3 (Identity / Authentication / Authorization), and M4 (Education Core) have been successfully implemented and verified.
+Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), M3 (Identity / Authentication / Authorization), M4 (Education Core), and M5 (Classroom & Attendance Core) have been successfully implemented and verified.
 
 ## Current Mode
 
@@ -9,12 +9,12 @@ IMPLEMENTATION MODE
 
 ## Current Milestone
 
-M4 — Education Core (VERIFIED)  
-Next Milestone: M5 — Classroom & Attendance
+M5 — Classroom & Attendance Core (VERIFIED)  
+Next Milestone: M6 — Assessment Domain
 
 ## Current Task
 
-M4-001 — Education Core: Courses, Lessons, Enrollments, and Education Gate. (COMPLETED & VERIFIED)
+M5-001 — Classroom & Attendance Core: Branches, Classrooms, Classes, Sessions, Attendance Records, QR Attendance & Reporting, and Attendance Gate. (COMPLETED & VERIFIED)
 
 ## Completed
 
@@ -49,22 +49,30 @@ M4-001 — Education Core: Courses, Lessons, Enrollments, and Education Gate. (C
   - Eloquent domain models: `Course`, `Lesson`, `Enrollment`, with relationships to `Staff` and `Student`
   - Controllers: `CourseController`, `LessonController`, `EnrollmentController`, `StudentController`
   - API routes for courses, lessons, enrollments, and student data
-  - Education Gate verified in `EducationGateTest` (Phase J §24):
-    - Teacher creates course
-    - Teacher creates lesson
-    - Student enrolls in course
-    - Student views authorized course and lessons
-    - Cross-tenant course isolation verified (404 on cross query, 401 on cross token)
-    - Assistant permissions boundary verified (permitted assistant allowed, basic assistant denied 403 FORBIDDEN)
+  - Education Gate verified in `EducationGateTest` (Phase J §24)
+- **M5-001 Classroom & Attendance Core**:
+  - Tenant database migration for `branches`, `classrooms`, `classes`, `class_students`, `sessions`, and `attendance_records`
+  - Eloquent domain models: `Branch`, `Classroom`, `SchoolClass`, `ClassSession`, `AttendanceRecord`, with relationships to `Student` and `Staff`
+  - Controllers: `ClassController`, `SessionController`, `AttendanceController`
+  - Invariant strictly enforced: `Attendance ≠ Session`
+  - Manual attendance recording, QR code scanning, and session attendance reporting with calculation of attendance rate percentage
+  - Attendance Gate verified in `AttendanceGateTest` (Phase J §27):
+    - Teacher creates class
+    - Student enrolled in class
+    - Teacher creates session
+    - Manual attendance recorded
+    - QR code scanned by assistant
+    - Unauthorized attendance attempt denied (403 FORBIDDEN)
+    - Session attendance report verified
+    - Cross-tenant session/attendance isolation verified (404 and 401)
 
 ## In Progress
 
-- Preparation for M5 (Classroom & Attendance: Branches, Classrooms, Classes, Sessions, Attendance, QR Attendance)
+- Preparation for M6 (Assessment Domain: Assignments, Submissions, Exams, Questions, Assessment Gate)
 
 ## Pending
 
-- M5 Classroom & Attendance
-- M6 Assessment
+- M6 Assessment Domain
 - M7 Billing / Entitlements
 - M8 Credentials / Devices
 - M9 Integrations
@@ -80,7 +88,7 @@ None.
 
 ## Verification Evidence
 
-- Backend Tests: `vendor/bin/phpunit` -> 18 tests, 152 assertions passed (EducationGateTest, IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
+- Backend Tests: `vendor/bin/phpunit` -> 19 tests, 181 assertions passed (AttendanceGateTest, EducationGateTest, IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
 - Backend Linter: `vendor/bin/pint --test` -> Passed (0 violations)
 - Frontend Types: `npx tsc --noEmit` -> Passed (0 errors)
 - Frontend Linter: `npm run lint` -> Passed (0 errors)

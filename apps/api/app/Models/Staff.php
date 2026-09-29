@@ -25,6 +25,11 @@ class Staff extends TenantModel
         return $this->hasMany(Course::class, 'teacher_staff_id');
     }
 
+    public function classes(): HasMany
+    {
+        return $this->hasMany(SchoolClass::class, 'teacher_staff_id');
+    }
+
     public function isTeacher(): bool
     {
         return $this->staff_type === 'teacher';

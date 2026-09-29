@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [M5-001] - 2026-09-29
+### Added
+- Classroom & Attendance Domain:
+  - Tenant database migration for `branches`, `classrooms`, `classes`, `class_students`, `sessions`, and `attendance_records` tables
+  - Eloquent domain models: `Branch`, `Classroom`, `SchoolClass`, `ClassSession`, and `AttendanceRecord` with relationships to `Staff` and `Student`
+  - Invariant strictly enforced: `Attendance ≠ Session`
+  - Controllers:
+    - `ClassController`: Academic classes listing, creation, and student enrollment
+    - `SessionController`: Class sessions scheduling and inspection
+    - `AttendanceController`: Manual student attendance recording, QR code scanning, and session attendance reporting
+  - Attendance Gate verified in `AttendanceGateTest` (Phase J §27):
+    - Teacher creates class
+    - Student enrolled in class
+    - Teacher creates session
+    - Student attendance recorded manually
+    - Assistant scans student QR credential
+    - Unauthorized attendance recording attempt denied (403 FORBIDDEN)
+    - Session attendance report with rate % generated
+    - Cross-tenant session/attendance isolation verified (404 and 401)
+  - Suite: 19 tests, 181 assertions passed (100% pass)
+- Documentation updates:
+  - `docs/domains/attendance/README.md`
+  - `docs/backend/README.md`
+  - `docs/project-management/current-state.md`
+  - `docs/project-management/implementation-ledger.md`
+
 ## [M4-001] - 2026-09-29
 ### Added
 - Education Core Domain:

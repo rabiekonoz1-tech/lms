@@ -63,9 +63,27 @@ apps/api/
   - `App\Http\Controllers\Api\Education\StudentController`
 - **Education Gate Verified**: Proven via `EducationGateTest` with full lifecycle (Teacher creates course & lessons, Student enrolls and views, cross-tenant isolation verified, Assistant permissions enforced).
 
+## 4. Classroom & Attendance Domain (M5)
+
+- **Domain Models (Tenant Database)**:
+  - `Branch`: Optional/organizational physical branch containing classrooms.
+  - `Classroom`: Room resource belonging to a branch with student capacity.
+  - `SchoolClass`: Academic class taught by `Staff` (teacher) containing enrolled students (`class_students`).
+  - `ClassSession`: Scheduled occurrence of a class (`Attendance ≠ Session`).
+  - `AttendanceRecord`: Student attendance status (`present`, `absent`, `late`, `excused`) and mode (`manual`, `qr`).
+- **Invariants Enforced**:
+  - `Attendance ≠ Session`
+  - `Failures default to deny` (SEC-INV-009)
+  - Strict cross-tenant isolation (SEC-INV-001)
+- **Controllers**:
+  - `App\Http\Controllers\Api\Attendance\ClassController`
+  - `App\Http\Controllers\Api\Attendance\SessionController`
+  - `App\Http\Controllers\Api\Attendance\AttendanceController`
+- **Attendance Gate Verified**: Proven via `AttendanceGateTest` (teacher creates class, creates session, records manual attendance, assistant scans student QR code, generates attendance summary report, and verifies cross-tenant isolation).
+
 ---
 
-## 4. Identity, Authentication & Authorization (M3)
+## 5. Identity, Authentication & Authorization (M3)
 
 - **Global Student Identity**: Control plane model (`GlobalIdentity`) linking across tenants via `StudentIdentityLink`.
 - **Invariants Enforced**:
@@ -79,7 +97,7 @@ apps/api/
 
 ---
 
-## 5. Tenancy Foundation (M2)
+## 6. Tenancy Foundation (M2)
 
 - **Control Plane**: Manages tenant registry, domain mappings, feature flags, and database allocation.
 - **Dynamic Database Switching**: Managed by `App\Tenancy\TenantDatabaseManager` via connection `'tenant'`.
@@ -89,14 +107,14 @@ apps/api/
 
 ---
 
-## 6. Runtime Foundation & API Contracts (M1)
+## 7. Runtime Foundation & API Contracts (M1)
 
-### 6.1 Request Correlation
+### 7.1 Request Correlation
 - Every incoming request through `RequestCorrelationMiddleware` is assigned a unique `request_id` (propagating an existing `X-Request-ID` header or generating a UUIDv4).
 - The `request_id` is bound to the request attributes and injected into the logging context (`Log::withContext(['request_id' => ...])`).
 - The `request_id` is returned in the `X-Request-ID` response header and inside the `meta.request_id` envelope.
 
-### 6.2 Response & Error Envelope
+### 7.2 Response & Error Envelope
 All API endpoints under `/api/v1` return standardized JSON envelopes matching the approved Phase F specification:
 
 **Success**:
@@ -125,7 +143,7 @@ All API endpoints under `/api/v1` return standardized JSON envelopes matching th
 }
 ```
 
-### 6.3 Centralized Exception Handling
+### 7.3 Centralized Exception Handling
 Configured in `bootstrap/app.php`:
 - `TenantNotFoundException` → 404 `TENANT_NOT_FOUND`
 - `TenantInactiveException` → 403 `TENANT_INACTIVE`
@@ -137,14 +155,14 @@ Configured in `bootstrap/app.php`:
 - `ThrottleRequestsException` → 429 `RATE_LIMIT_EXCEEDED`
 - `Throwable` → 500 `INTERNAL_SERVER_ERROR` (hides internals unless `APP_DEBUG=true`)
 
-### 6.4 Health Check Endpoint
+### 7.4 Health Check Endpoint
 - **URL**: `GET /api/v1/health`
 - **Controller**: `App\Http\Controllers\Api\HealthCheckController`
 - **Output**: Reports database and cache connectivity, application version, and environment.
 
 ---
 
-## 7. Verification & Development Commands
+## 8. Verification & Development Commands
 
 From `apps/api/`:
 

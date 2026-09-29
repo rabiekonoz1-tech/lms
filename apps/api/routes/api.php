@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\Attendance\AttendanceController;
+use App\Http\Controllers\Api\Attendance\ClassController;
+use App\Http\Controllers\Api\Attendance\SessionController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\MeController;
@@ -64,5 +67,33 @@ Route::middleware('tenant')->group(function () {
 
         // Education - Students
         Route::get('/students/{id}', [StudentController::class, 'show'])->name('api.students.show');
+
+        // Attendance - Classes
+        Route::get('/classes', [ClassController::class, 'index'])->name('api.classes.index');
+        Route::post('/classes', [ClassController::class, 'store'])
+            ->middleware('tenant.can:classes.create')
+            ->name('api.classes.create');
+        Route::get('/classes/{id}', [ClassController::class, 'show'])->name('api.classes.show');
+        Route::post('/classes/{id}/students', [ClassController::class, 'enrollStudent'])
+            ->middleware('tenant.can:classes.manage_students')
+            ->name('api.classes.students.enroll');
+
+        // Attendance - Sessions
+        Route::get('/classes/{classId}/sessions', [SessionController::class, 'index'])->name('api.sessions.index');
+        Route::post('/classes/{classId}/sessions', [SessionController::class, 'store'])
+            ->middleware('tenant.can:sessions.create')
+            ->name('api.sessions.create');
+        Route::get('/classes/{classId}/sessions/{id}', [SessionController::class, 'show'])->name('api.sessions.show');
+
+        // Attendance - Records & Reporting
+        Route::post('/sessions/{sessionId}/attendance', [AttendanceController::class, 'record'])
+            ->middleware('tenant.can:attendance.record')
+            ->name('api.attendance.record');
+        Route::post('/sessions/{sessionId}/attendance/scan', [AttendanceController::class, 'qrScan'])
+            ->middleware('tenant.can:attendance.record')
+            ->name('api.attendance.scan');
+        Route::get('/sessions/{sessionId}/attendance/report', [AttendanceController::class, 'report'])
+            ->middleware('tenant.can:attendance.view')
+            ->name('api.attendance.report');
     });
 });
