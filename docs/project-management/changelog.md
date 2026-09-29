@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [M3-001] - 2026-09-29
+### Added
+- Identity, Authentication & Authorization Core Foundation:
+  - Control plane models and migrations for Global Identity: `GlobalIdentity`, `StudentIdentityLink`
+  - Tenant database models and migrations: `TenantUser`, `Student`, `Staff`, `ParentProfile`, `Role`, `Permission`, `TenantToken`
+  - Invariants strictly enforced: `User ≠ Student`, `Teacher ≠ Role`, `Parent ≠ Student`, `Global Identity ≠ Tenant Authorization` (SEC-INV-006)
+  - Bearer token authentication: `POST /api/v1/auth/login`, `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`
+  - Granular RBAC authorization with default deny: `TenantAuthorize` middleware (`tenant.can:<permission>`)
+  - Gates passed: `IdentityGateTest`, `AuthenticationGateTest`, `AuthorizationGateTest` (17 tests, 125 assertions passed)
+  - Frontend `ApiClient` updated with automatic Bearer token injection
+- Documentation updates:
+  - `docs/domains/identity/README.md`
+  - `docs/backend/README.md`
+  - `docs/project-management/current-state.md`
+  - `docs/project-management/implementation-ledger.md`
+
 ## [M2-001] - 2026-09-29
 ### Added
 - Tenancy Foundation (Control DB + Tenant DB architecture):

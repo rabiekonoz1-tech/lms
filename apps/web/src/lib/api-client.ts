@@ -56,19 +56,22 @@ export interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
   params?: Record<string, string | number | boolean | undefined | null>;
   tenant?: string;
+  token?: string;
 }
 
 export class ApiClient {
   private readonly baseUrl: string;
   private defaultTenant?: string;
+  private authToken?: string;
 
-  constructor(baseUrl?: string, defaultTenant?: string) {
+  constructor(baseUrl?: string, defaultTenant?: string, authToken?: string) {
     this.baseUrl = (
       baseUrl ||
       process.env.NEXT_PUBLIC_API_URL ||
       "http://localhost:8000/api/v1"
     ).replace(/\/$/, "");
     this.defaultTenant = defaultTenant;
+    this.authToken = authToken;
   }
 
   /**
@@ -76,6 +79,13 @@ export class ApiClient {
    */
   public setTenant(tenantSlug: string): void {
     this.defaultTenant = tenantSlug;
+  }
+
+  /**
+   * Set default bearer token for all subsequent requests.
+   */
+  public setToken(token: string | null): void {
+    this.authToken = token || undefined;
   }
 
   /**
@@ -109,6 +119,11 @@ export class ApiClient {
     const tenantSlug = options.tenant || this.defaultTenant;
     if (tenantSlug && !requestHeaders.has("X-Tenant-Slug")) {
       requestHeaders.set("X-Tenant-Slug", tenantSlug);
+    }
+
+    const authToken = options.token || this.authToken;
+    if (authToken && !requestHeaders.has("Authorization")) {
+      requestHeaders.set("Authorization", `Bearer ${authToken}`);
     }
 
     if (!requestHeaders.has("Accept")) {

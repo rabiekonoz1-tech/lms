@@ -14,19 +14,29 @@ class TenantIsolationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->cleanupTestDatabases();
+    }
+
     protected function tearDown(): void
     {
-        // Clean up temporary tenant databases created for isolation tests
+        $this->cleanupTestDatabases();
+        parent::tearDown();
+    }
+
+    protected function cleanupTestDatabases(): void
+    {
+        app(TenantDatabaseManager::class)->purgeConnection();
         $dir = database_path('tenants');
         if (is_dir($dir)) {
-            foreach (glob($dir.DIRECTORY_SEPARATOR.'test_*.sqlite') as $file) {
+            foreach (glob($dir.DIRECTORY_SEPARATOR.'test_tenant_*.sqlite') as $file) {
                 if (file_exists($file)) {
                     @unlink($file);
                 }
             }
         }
-
-        parent::tearDown();
     }
 
     /**
@@ -36,32 +46,33 @@ class TenantIsolationTest extends TestCase
     {
         $dbManager = app(TenantDatabaseManager::class);
         $context = app(TenantContext::class);
+        $runId = uniqid();
 
         // 1. Provision Tenant A
         $tenantA = Tenant::create([
             'name' => 'Tenant A Academy',
-            'slug' => 'tenant-a',
+            'slug' => 'tenant-a-'.$runId,
             'type' => 'individual_teacher',
             'status' => 'active',
         ]);
 
         TenantDatabase::create([
             'tenant_id' => $tenantA->id,
-            'connection_identifier' => 'test_tenant_a',
+            'connection_identifier' => 'test_tenant_a_'.$runId,
             'status' => 'ready',
         ]);
 
         // 2. Provision Tenant B
         $tenantB = Tenant::create([
             'name' => 'Tenant B Center',
-            'slug' => 'tenant-b',
+            'slug' => 'tenant-b-'.$runId,
             'type' => 'educational_center',
             'status' => 'active',
         ]);
 
         TenantDatabase::create([
             'tenant_id' => $tenantB->id,
-            'connection_identifier' => 'test_tenant_b',
+            'connection_identifier' => 'test_tenant_b_'.$runId,
             'status' => 'ready',
         ]);
 

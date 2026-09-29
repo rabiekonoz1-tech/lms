@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\RequestCorrelationMiddleware;
+use App\Http\Middleware\TenantAuthenticate;
+use App\Http\Middleware\TenantAuthorize;
 use App\Http\Middleware\TenantResolutionMiddleware;
 use App\Support\ApiResponse;
 use App\Tenancy\Exceptions\TenantInactiveException;
@@ -33,6 +35,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prepend(RequestCorrelationMiddleware::class);
         $middleware->alias([
             'tenant' => TenantResolutionMiddleware::class,
+            'tenant.auth' => TenantAuthenticate::class,
+            'tenant.can' => TenantAuthorize::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
