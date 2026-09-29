@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [M6-001] - 2026-09-29
+### Added
+- Assessment Domain:
+  - Tenant database migration for `assignments`, `assignment_submissions`, `exams`, `questions`, `exam_attempts`, `exam_answers`, and `grades` tables
+  - Eloquent domain models: `Assignment`, `AssignmentSubmission`, `Exam`, `Question`, `ExamAttempt`, `ExamAnswer`, and `Grade`
+  - Invariants strictly enforced: `Assessment ownership belongs to tenant`, `Grade model independence`, `Controlled grade publication`
+  - Controllers:
+    - `AssignmentController`: Creation, retrieval, deadline-aware submissions, duplicate submission rejection, grading, and grade publishing
+    - `ExamController`: Creation, question management, student attempt lifecycle (start, answer, submit), duplicate attempt rejection, grading, and grade publishing
+    - `GradeController`: Independent student grade reporting with publication visibility filtering
+  - Assessment Gate verified in `AssessmentGateTest` (Phase J §30):
+    - Assignment submission & deadline tracking
+    - Late submission flagging (`is_late = true`)
+    - Duplicate submission blocking (`422 DUPLICATE_SUBMISSION`)
+    - Exam start, question answering, and submission
+    - Duplicate exam attempt blocking (`422 DUPLICATE_ATTEMPT`)
+    - Teacher grading and grade publication control
+    - Student grades visibility strictly controlled by publication state
+    - Backend authorization enforcement (`403 FORBIDDEN` for students attempting to grade)
+    - Cross-tenant assessment isolation verified (`404` and `401`)
+  - Suite: 20 tests, 220 assertions passed (100% pass)
+- Documentation updates:
+  - `docs/domains/assessment/README.md`
+  - `docs/backend/README.md`
+  - `docs/project-management/current-state.md`
+  - `docs/project-management/implementation-ledger.md`
+
 ## [M5-001] - 2026-09-29
 ### Added
 - Classroom & Attendance Domain:

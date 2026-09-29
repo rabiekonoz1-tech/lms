@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\Assessment\AssignmentController;
+use App\Http\Controllers\Api\Assessment\ExamController;
+use App\Http\Controllers\Api\Assessment\GradeController;
 use App\Http\Controllers\Api\Attendance\AttendanceController;
 use App\Http\Controllers\Api\Attendance\ClassController;
 use App\Http\Controllers\Api\Attendance\SessionController;
@@ -95,5 +98,40 @@ Route::middleware('tenant')->group(function () {
         Route::get('/sessions/{sessionId}/attendance/report', [AttendanceController::class, 'report'])
             ->middleware('tenant.can:attendance.view')
             ->name('api.attendance.report');
+
+        // Assessment - Assignments
+        Route::get('/courses/{courseId}/assignments', [AssignmentController::class, 'index'])->name('api.assignments.index');
+        Route::post('/courses/{courseId}/assignments', [AssignmentController::class, 'store'])
+            ->middleware('tenant.can:assignments.create')
+            ->name('api.assignments.create');
+        Route::get('/courses/{courseId}/assignments/{id}', [AssignmentController::class, 'show'])->name('api.assignments.show');
+        Route::post('/courses/{courseId}/assignments/{id}/submit', [AssignmentController::class, 'submit'])->name('api.assignments.submit');
+        Route::post('/courses/{courseId}/assignments/{id}/submissions/{submissionId}/grade', [AssignmentController::class, 'grade'])
+            ->middleware('tenant.can:assignments.grade')
+            ->name('api.assignments.grade');
+        Route::post('/courses/{courseId}/assignments/{id}/publish-grades', [AssignmentController::class, 'publishGrades'])
+            ->middleware('tenant.can:assignments.grade')
+            ->name('api.assignments.publish_grades');
+
+        // Assessment - Exams
+        Route::get('/courses/{courseId}/exams', [ExamController::class, 'index'])->name('api.exams.index');
+        Route::post('/courses/{courseId}/exams', [ExamController::class, 'store'])
+            ->middleware('tenant.can:exams.create')
+            ->name('api.exams.create');
+        Route::post('/courses/{courseId}/exams/{id}/questions', [ExamController::class, 'addQuestion'])
+            ->middleware('tenant.can:exams.create')
+            ->name('api.exams.questions.add');
+        Route::post('/courses/{courseId}/exams/{id}/start', [ExamController::class, 'start'])->name('api.exams.start');
+        Route::post('/courses/{courseId}/exams/{id}/attempts/{attemptId}/answers', [ExamController::class, 'submitAnswer'])->name('api.exams.answers.submit');
+        Route::post('/courses/{courseId}/exams/{id}/attempts/{attemptId}/submit', [ExamController::class, 'submit'])->name('api.exams.submit');
+        Route::post('/courses/{courseId}/exams/{id}/attempts/{attemptId}/grade', [ExamController::class, 'grade'])
+            ->middleware('tenant.can:exams.grade')
+            ->name('api.exams.grade');
+        Route::post('/courses/{courseId}/exams/{id}/publish-grades', [ExamController::class, 'publishGrades'])
+            ->middleware('tenant.can:exams.grade')
+            ->name('api.exams.publish_grades');
+
+        // Assessment - Grades
+        Route::get('/students/{studentId}/grades', [GradeController::class, 'studentGrades'])->name('api.students.grades');
     });
 });

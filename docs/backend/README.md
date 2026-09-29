@@ -83,7 +83,31 @@ apps/api/
 
 ---
 
-## 5. Identity, Authentication & Authorization (M3)
+## 5. Assessment Domain (M6)
+
+- **Domain Models (Tenant Database)**:
+  - `Assignment`: Course/lesson learning task with points and `due_at` deadline.
+  - `AssignmentSubmission`: Student submission with late arrival tracking (`is_late`), scoring, and feedback.
+  - `Exam`: Timed evaluation with question pool, points, and grade publication toggle.
+  - `Question`: Question item supporting multiple choice, essay, and true/false types with options and point values.
+  - `ExamAttempt`: Student lifecycle of exam sitting (`started_at`, `submitted_at`, `status`).
+  - `ExamAnswer`: Student answer recording with auto/manual point awards.
+  - `Grade`: Independent grade record with student reference, gradable reference, score, max score, percentage, and controlled publication state (`is_published`).
+- **Invariants Enforced**:
+  - `Assessment ownership belongs to tenant`
+  - `Grade model independence`
+  - `Controlled grade publication`
+  - `Failures default to deny` (SEC-INV-009)
+  - Strict cross-tenant isolation (SEC-INV-001)
+- **Controllers**:
+  - `App\Http\Controllers\Api\Assessment\AssignmentController`
+  - `App\Http\Controllers\Api\Assessment\ExamController`
+  - `App\Http\Controllers\Api\Assessment\GradeController`
+- **Assessment Gate Verified**: Proven via `AssessmentGateTest` (assignment submission, deadline check, late submission flagging, duplicate submission rejection, exam start, duplicate attempt rejection, answer recording, exam submit, teacher grading, controlled grade publication, permission enforcement, and tenant isolation).
+
+---
+
+## 6. Identity, Authentication & Authorization (M3)
 
 - **Global Student Identity**: Control plane model (`GlobalIdentity`) linking across tenants via `StudentIdentityLink`.
 - **Invariants Enforced**:
@@ -97,7 +121,7 @@ apps/api/
 
 ---
 
-## 6. Tenancy Foundation (M2)
+## 7. Tenancy Foundation (M2)
 
 - **Control Plane**: Manages tenant registry, domain mappings, feature flags, and database allocation.
 - **Dynamic Database Switching**: Managed by `App\Tenancy\TenantDatabaseManager` via connection `'tenant'`.
@@ -107,14 +131,14 @@ apps/api/
 
 ---
 
-## 7. Runtime Foundation & API Contracts (M1)
+## 8. Runtime Foundation & API Contracts (M1)
 
-### 7.1 Request Correlation
+### 8.1 Request Correlation
 - Every incoming request through `RequestCorrelationMiddleware` is assigned a unique `request_id` (propagating an existing `X-Request-ID` header or generating a UUIDv4).
 - The `request_id` is bound to the request attributes and injected into the logging context (`Log::withContext(['request_id' => ...])`).
 - The `request_id` is returned in the `X-Request-ID` response header and inside the `meta.request_id` envelope.
 
-### 7.2 Response & Error Envelope
+### 8.2 Response & Error Envelope
 All API endpoints under `/api/v1` return standardized JSON envelopes matching the approved Phase F specification:
 
 **Success**:
@@ -143,7 +167,7 @@ All API endpoints under `/api/v1` return standardized JSON envelopes matching th
 }
 ```
 
-### 7.3 Centralized Exception Handling
+### 8.3 Centralized Exception Handling
 Configured in `bootstrap/app.php`:
 - `TenantNotFoundException` → 404 `TENANT_NOT_FOUND`
 - `TenantInactiveException` → 403 `TENANT_INACTIVE`
@@ -155,14 +179,14 @@ Configured in `bootstrap/app.php`:
 - `ThrottleRequestsException` → 429 `RATE_LIMIT_EXCEEDED`
 - `Throwable` → 500 `INTERNAL_SERVER_ERROR` (hides internals unless `APP_DEBUG=true`)
 
-### 7.4 Health Check Endpoint
+### 8.4 Health Check Endpoint
 - **URL**: `GET /api/v1/health`
 - **Controller**: `App\Http\Controllers\Api\HealthCheckController`
 - **Output**: Reports database and cache connectivity, application version, and environment.
 
 ---
 
-## 8. Verification & Development Commands
+## 9. Verification & Development Commands
 
 From `apps/api/`:
 

@@ -1,7 +1,7 @@
 # Current Project State
 
 Planning/documentation phases A–K have been approved.
-Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), M3 (Identity / Authentication / Authorization), M4 (Education Core), and M5 (Classroom & Attendance Core) have been successfully implemented and verified.
+Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), M3 (Identity / Authentication / Authorization), M4 (Education Core), M5 (Classroom & Attendance Core), and M6 (Assessment Domain) have been successfully implemented and verified.
 
 ## Current Mode
 
@@ -9,12 +9,12 @@ IMPLEMENTATION MODE
 
 ## Current Milestone
 
-M5 — Classroom & Attendance Core (VERIFIED)  
-Next Milestone: M6 — Assessment Domain
+M6 — Assessment Domain (VERIFIED)  
+Next Milestone: M7 — Billing, Packages & Entitlements
 
 ## Current Task
 
-M5-001 — Classroom & Attendance Core: Branches, Classrooms, Classes, Sessions, Attendance Records, QR Attendance & Reporting, and Attendance Gate. (COMPLETED & VERIFIED)
+M6-001 — Assessment Domain: Assignments, Submissions, Deadlines, Late Tracking, Exams, Questions, Attempts, Answers, Independent Grades, Grade Publication, and Assessment Gate. (COMPLETED & VERIFIED)
 
 ## Completed
 
@@ -56,23 +56,29 @@ M5-001 — Classroom & Attendance Core: Branches, Classrooms, Classes, Sessions,
   - Controllers: `ClassController`, `SessionController`, `AttendanceController`
   - Invariant strictly enforced: `Attendance ≠ Session`
   - Manual attendance recording, QR code scanning, and session attendance reporting with calculation of attendance rate percentage
-  - Attendance Gate verified in `AttendanceGateTest` (Phase J §27):
-    - Teacher creates class
-    - Student enrolled in class
-    - Teacher creates session
-    - Manual attendance recorded
-    - QR code scanned by assistant
-    - Unauthorized attendance attempt denied (403 FORBIDDEN)
-    - Session attendance report verified
-    - Cross-tenant session/attendance isolation verified (404 and 401)
+  - Attendance Gate verified in `AttendanceGateTest` (Phase J §27)
+- **M6-001 Assessment Domain**:
+  - Tenant database migration for `assignments`, `assignment_submissions`, `exams`, `questions`, `exam_attempts`, `exam_answers`, and `grades`
+  - Eloquent domain models: `Assignment`, `AssignmentSubmission`, `Exam`, `Question`, `ExamAttempt`, `ExamAnswer`, `Grade`
+  - Invariants strictly enforced: `Assessment ownership belongs to tenant`, `Grade model independence`, `Controlled grade publication`
+  - Controllers: `AssignmentController`, `ExamController`, `GradeController`
+  - Assessment Gate verified in `AssessmentGateTest` (Phase J §30):
+    - Assignment submission & deadline tracking
+    - Late submission flagging (`is_late = true`)
+    - Duplicate submission blocking (`422 DUPLICATE_SUBMISSION`)
+    - Exam start, question answering, and submission
+    - Duplicate exam attempt blocking (`422 DUPLICATE_ATTEMPT`)
+    - Teacher grading and grade publication control
+    - Student grades visibility strictly controlled by publication state
+    - Backend authorization enforcement (`403 FORBIDDEN` for students attempting to grade)
+    - Cross-tenant assessment isolation verified (`404` and `401`)
 
 ## In Progress
 
-- Preparation for M6 (Assessment Domain: Assignments, Submissions, Exams, Questions, Assessment Gate)
+- Preparation for M7 (Billing, Packages & Entitlements: Packages, Student Submissions, Credentials, Payment Gate)
 
 ## Pending
 
-- M6 Assessment Domain
 - M7 Billing / Entitlements
 - M8 Credentials / Devices
 - M9 Integrations
@@ -88,7 +94,7 @@ None.
 
 ## Verification Evidence
 
-- Backend Tests: `vendor/bin/phpunit` -> 19 tests, 181 assertions passed (AttendanceGateTest, EducationGateTest, IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
+- Backend Tests: `vendor/bin/phpunit` -> 20 tests, 220 assertions passed (AssessmentGateTest, AttendanceGateTest, EducationGateTest, IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
 - Backend Linter: `vendor/bin/pint --test` -> Passed (0 violations)
 - Frontend Types: `npx tsc --noEmit` -> Passed (0 errors)
 - Frontend Linter: `npm run lint` -> Passed (0 errors)

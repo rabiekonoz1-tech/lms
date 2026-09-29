@@ -8,5 +8,6 @@
 | M3-001 | M3 | VERIFIED | AI Agent | Passed (PHPUnit: 17 tests, 125 assertions; Pint: Pass; ESLint: Pass; TSC: Pass) | Updated | Identity, Auth & Authz: Global Identity, Tenant Accounts, Invariants, Auth Gate, RBAC Default Deny |
 | M4-001 | M4 | VERIFIED | AI Agent | Passed (PHPUnit: 18 tests, 152 assertions; Pint: Pass; ESLint: Pass; TSC: Pass) | Updated | Education Core: Courses, Lessons, Enrollments, Education Gate Verified (Phase J §24) |
 | M5-001 | M5 | VERIFIED | AI Agent | Passed (PHPUnit: 19 tests, 181 assertions; Pint: Pass; ESLint: Pass; TSC: Pass) | Updated | Classroom & Attendance: Branches, Classrooms, Classes, Sessions, Attendance Records, QR Scan, Report, Attendance Gate Verified (Phase J §27) |
+| M6-001 | M6 | VERIFIED | AI Agent | Passed (PHPUnit: 20 tests, 220 assertions; Pint: Pass; ESLint: Pass; TSC: Pass) | Updated | Assessment Domain: Assignments, Submissions, Late Tracking, Exams, Questions, Attempts, Grades, Assessment Gate Verified (Phase J §30) |
 
 Use this file as the authoritative implementation memory.
