@@ -1,7 +1,7 @@
 # Current Project State
 
 Planning/documentation phases A–K have been approved.
-Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), and M3 (Identity / Authentication / Authorization) have been successfully implemented and verified.
+Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), M3 (Identity / Authentication / Authorization), and M4 (Education Core) have been successfully implemented and verified.
 
 ## Current Mode
 
@@ -9,12 +9,12 @@ IMPLEMENTATION MODE
 
 ## Current Milestone
 
-M3 — Identity / Authentication / Authorization (VERIFIED)  
-Next Milestone: M4 — Education Core
+M4 — Education Core (VERIFIED)  
+Next Milestone: M5 — Classroom & Attendance
 
 ## Current Task
 
-M3-001 — Identity, Authentication & Authorization Core Foundation. (COMPLETED & VERIFIED)
+M4-001 — Education Core: Courses, Lessons, Enrollments, and Education Gate. (COMPLETED & VERIFIED)
 
 ## Completed
 
@@ -44,15 +44,26 @@ M3-001 — Identity, Authentication & Authorization Core Foundation. (COMPLETED 
   - Bearer token authentication (`TenantToken`, `POST /api/v1/auth/login`, `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`)
   - Granular RBAC permissions with default deny (`TenantAuthorize` middleware, `tenant.can:<permission>`)
   - Identity, Authentication, and Authorization Gates passed with full test coverage
+- **M4-001 Education Core**:
+  - Tenant database migration for `courses`, `lessons`, and `enrollments`
+  - Eloquent domain models: `Course`, `Lesson`, `Enrollment`, with relationships to `Staff` and `Student`
+  - Controllers: `CourseController`, `LessonController`, `EnrollmentController`, `StudentController`
+  - API routes for courses, lessons, enrollments, and student data
+  - Education Gate verified in `EducationGateTest` (Phase J §24):
+    - Teacher creates course
+    - Teacher creates lesson
+    - Student enrolls in course
+    - Student views authorized course and lessons
+    - Cross-tenant course isolation verified (404 on cross query, 401 on cross token)
+    - Assistant permissions boundary verified (permitted assistant allowed, basic assistant denied 403 FORBIDDEN)
 
 ## In Progress
 
-- Preparation for M4 (Education Core: Students, Staff, Courses, Lessons, Enrollments)
+- Preparation for M5 (Classroom & Attendance: Branches, Classrooms, Classes, Sessions, Attendance, QR Attendance)
 
 ## Pending
 
-- M4 Education Core
-- M5 Attendance
+- M5 Classroom & Attendance
 - M6 Assessment
 - M7 Billing / Entitlements
 - M8 Credentials / Devices
@@ -69,7 +80,7 @@ None.
 
 ## Verification Evidence
 
-- Backend Tests: `vendor/bin/phpunit` -> 17 tests, 125 assertions passed (IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
+- Backend Tests: `vendor/bin/phpunit` -> 18 tests, 152 assertions passed (EducationGateTest, IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
 - Backend Linter: `vendor/bin/pint --test` -> Passed (0 violations)
 - Frontend Types: `npx tsc --noEmit` -> Passed (0 errors)
 - Frontend Linter: `npm run lint` -> Passed (0 errors)

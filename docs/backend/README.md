@@ -43,7 +43,29 @@ apps/api/
 
 ---
 
-## 3. Identity, Authentication & Authorization (M3)
+## 3. Education Core Domain (M4)
+
+- **Domain Models (Tenant Database)**:
+  - `Course`: Represents educational course owned/taught by `Staff` (teacher), containing `Lesson`s and `Enrollment`s.
+  - `Lesson`: Unit of educational content belonging to a `Course`, ordered by `sort_order`.
+  - `Enrollment`: Distinct participation entity linking `Student` to `Course` (`Course ≠ Subscription`, `Enrollment ≠ Payment`).
+- **Invariants Enforced**:
+  - `User ≠ Student`
+  - `Teacher ≠ Role`
+  - `Course ≠ Subscription`
+  - `Enrollment ≠ Payment`
+  - `Failures default to deny` (SEC-INV-009)
+  - Strict cross-tenant isolation (SEC-INV-001)
+- **Controllers**:
+  - `App\Http\Controllers\Api\Education\CourseController`
+  - `App\Http\Controllers\Api\Education\LessonController`
+  - `App\Http\Controllers\Api\Education\EnrollmentController`
+  - `App\Http\Controllers\Api\Education\StudentController`
+- **Education Gate Verified**: Proven via `EducationGateTest` with full lifecycle (Teacher creates course & lessons, Student enrolls and views, cross-tenant isolation verified, Assistant permissions enforced).
+
+---
+
+## 4. Identity, Authentication & Authorization (M3)
 
 - **Global Student Identity**: Control plane model (`GlobalIdentity`) linking across tenants via `StudentIdentityLink`.
 - **Invariants Enforced**:
@@ -57,7 +79,7 @@ apps/api/
 
 ---
 
-## 4. Tenancy Foundation (M2)
+## 5. Tenancy Foundation (M2)
 
 - **Control Plane**: Manages tenant registry, domain mappings, feature flags, and database allocation.
 - **Dynamic Database Switching**: Managed by `App\Tenancy\TenantDatabaseManager` via connection `'tenant'`.
@@ -67,14 +89,14 @@ apps/api/
 
 ---
 
-## 5. Runtime Foundation & API Contracts (M1)
+## 6. Runtime Foundation & API Contracts (M1)
 
-### 5.1 Request Correlation
+### 6.1 Request Correlation
 - Every incoming request through `RequestCorrelationMiddleware` is assigned a unique `request_id` (propagating an existing `X-Request-ID` header or generating a UUIDv4).
 - The `request_id` is bound to the request attributes and injected into the logging context (`Log::withContext(['request_id' => ...])`).
 - The `request_id` is returned in the `X-Request-ID` response header and inside the `meta.request_id` envelope.
 
-### 5.2 Response & Error Envelope
+### 6.2 Response & Error Envelope
 All API endpoints under `/api/v1` return standardized JSON envelopes matching the approved Phase F specification:
 
 **Success**:
@@ -103,7 +125,7 @@ All API endpoints under `/api/v1` return standardized JSON envelopes matching th
 }
 ```
 
-### 5.3 Centralized Exception Handling
+### 6.3 Centralized Exception Handling
 Configured in `bootstrap/app.php`:
 - `TenantNotFoundException` → 404 `TENANT_NOT_FOUND`
 - `TenantInactiveException` → 403 `TENANT_INACTIVE`
@@ -115,14 +137,14 @@ Configured in `bootstrap/app.php`:
 - `ThrottleRequestsException` → 429 `RATE_LIMIT_EXCEEDED`
 - `Throwable` → 500 `INTERNAL_SERVER_ERROR` (hides internals unless `APP_DEBUG=true`)
 
-### 5.4 Health Check Endpoint
+### 6.4 Health Check Endpoint
 - **URL**: `GET /api/v1/health`
 - **Controller**: `App\Http\Controllers\Api\HealthCheckController`
 - **Output**: Reports database and cache connectivity, application version, and environment.
 
 ---
 
-## 6. Verification & Development Commands
+## 7. Verification & Development Commands
 
 From `apps/api/`:
 

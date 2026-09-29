@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [M4-001] - 2026-09-29
+### Added
+- Education Core Domain:
+  - Tenant database migration for `courses`, `lessons`, and `enrollments` tables
+  - Eloquent domain models: `Course`, `Lesson`, and `Enrollment` with relationships to `Staff` and `Student`
+  - Controllers:
+    - `CourseController`: Course creation, list (with role/student filtering), inspection, update, and deletion
+    - `LessonController`: Course lesson creation and listing
+    - `EnrollmentController`: Self and admin enrollment, student enrollment listings
+    - `StudentController`: Student profile inspection with strict permission checks
+  - Education Gate verified in `EducationGateTest` (Phase J §24):
+    - Teacher creates course
+    - Teacher creates lesson
+    - Student enrolls in course
+    - Student views authorized course and lessons
+    - Cross-tenant course isolation verified (404 on cross query, 401 on cross token)
+    - Assistant permissions boundary verified (permitted assistant allowed, basic assistant denied with 403 FORBIDDEN)
+  - Suite: 18 tests, 152 assertions passed (100% pass)
+- Documentation updates:
+  - `docs/domains/education/README.md`
+  - `docs/project-management/current-state.md`
+  - `docs/project-management/implementation-ledger.md`
+
 ## [M3-001] - 2026-09-29
 ### Added
 - Identity, Authentication & Authorization Core Foundation:

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Staff extends TenantModel
 {
@@ -17,6 +18,11 @@ class Staff extends TenantModel
     public function user(): BelongsTo
     {
         return $this->belongsTo(TenantUser::class, 'user_id');
+    }
+
+    public function courses(): HasMany
+    {
+        return $this->hasMany(Course::class, 'teacher_staff_id');
     }
 
     public function isTeacher(): bool
