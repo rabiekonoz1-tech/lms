@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  backend:
+    name: Backend CI (Laravel)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Copy .env
+        working-directory: apps/api
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+      - name: Install Composer Dependencies
+        working-directory: apps/api
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Generate App Key
+        working-directory: apps/api
+        run: php artisan key:generate --no-interaction
+
+      - name: Run Pint (Code Style)
+        working-directory: apps/api
+        run: vendor/bin/pint --test
+
+      - name: Run PHPUnit Tests
+        working-directory: apps/api
+        run: vendor/bin/phpunit
+
+  frontend:
+    name: Frontend CI (Next.js)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: apps/web/package.json
+
+      - name: Install Dependencies
+        working-directory: apps/web
+        run: npm ci || npm install
+
+      - name: Type Check
+        working-directory: apps/web
+        run: npx tsc --noEmit
+
+      - name: Run ESLint
+        working-directory: apps/web
+        run: npm run lint
+
+      - name: Build Web Application
+        working-directory: apps/web
+        run: npm run build
