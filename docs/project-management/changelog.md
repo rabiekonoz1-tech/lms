@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [M2-001] - 2026-09-29
+### Added
+- Tenancy Foundation (Control DB + Tenant DB architecture):
+  - Control plane models and migrations: `Tenant`, `TenantDomain`, `TenantDatabase`, `TenantFeature`
+  - `TenantContext` singleton holding request-scoped active tenant state
+  - `TenantResolver` resolving tenants via custom domains, subdomains, and `X-Tenant-Slug` / `X-Tenant-ID` headers
+  - `TenantDatabaseManager` providing dynamic connection switching to `'tenant'` database connection and migration orchestration
+  - `TenantModel` base class guaranteeing tenant connection scoping
+  - `TenantResolutionMiddleware` enforcing tenant context and database binding on tenant routes
+  - `GET /api/v1/tenant/current` endpoint returning resolved tenant information
+  - Verification: `TenantResolutionTest` and `TenantIsolationTest` (Tenant Gate passed: strict database isolation between tenants verified)
+  - Frontend `ApiClient` updated with tenant slug injection support
+- Documentation updates:
+  - `docs/domains/tenancy/README.md`
+  - `docs/backend/README.md`
+  - `docs/project-management/current-state.md`
+  - `docs/project-management/implementation-ledger.md`
+
 ## [M1-001] - 2026-09-29
 ### Added
 - Runtime Foundation core components:

@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Tenancy;
+
+use App\Models\Tenant;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+
+class TenantDatabaseManager
+{
+    /**
+     * Configure and activate the tenant database connection.
+     */
+    public function configureConnection(Tenant $tenant): void
+    {
+        $identifier = $tenant->databaseConfig?->connection_identifier
+            ?? 'tenant_'.$tenant->slug;
+
+        $driver = config('database.connections.tenant.driver', 'sqlite');
+
+        if ($driver === 'sqlite') {
+            if ($identifier === ':memory:') {
+                $dbPath = ':memory:';
+            } else {
+                $dir = database_path('tenants');
+                if (! is_dir($dir)) {
+                    mkdir($dir, 0755, true);
+                }
+                $dbPath = $dir.DIRECTORY_SEPARATOR.$identifier.'.sqlite';
+                if (! file_exists($dbPath)) {
+                    touch($dbPath);
+                }
+            }
+            config(['database.connections.tenant.database' => $dbPath]);
+        } else {
+            config(['database.connections.tenant.database' => $identifier]);
+        }
+
+        DB::purge('tenant');
+        DB::reconnect('tenant');
+    }
+
+    /**
+     * Run tenant migrations on the tenant database connection.
+     */
+    public function migrateTenant(Tenant $tenant, string $path = 'database/migrations/tenant'): int
+    {
+        $this->configureConnection($tenant);
+
+        return Artisan::call('migrate', [
+            '--database' => 'tenant',
+            '--path' => $path,
+            '--force' => true,
+        ]);
+    }
+
+    /**
+     * Disconnect and purge tenant database connection.
+     */
+    public function purgeConnection(): void
+    {
+        DB::purge('tenant');
+    }
+}

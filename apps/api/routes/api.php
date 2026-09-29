@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\HealthCheckController;
+use App\Http\Controllers\Api\TenantCurrentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,4 +14,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Public platform endpoints
 Route::get('/health', HealthCheckController::class)->name('api.health');
+
+// Tenant-scoped endpoints (protected by TenantResolutionMiddleware)
+Route::middleware('tenant')->group(function () {
+    Route::get('/tenant/current', TenantCurrentController::class)->name('api.tenant.current');
+});

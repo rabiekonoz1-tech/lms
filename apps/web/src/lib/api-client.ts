@@ -55,17 +55,27 @@ export class ApiError extends Error {
 export interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
   params?: Record<string, string | number | boolean | undefined | null>;
+  tenant?: string;
 }
 
 export class ApiClient {
   private readonly baseUrl: string;
+  private defaultTenant?: string;
 
-  constructor(baseUrl?: string) {
+  constructor(baseUrl?: string, defaultTenant?: string) {
     this.baseUrl = (
       baseUrl ||
       process.env.NEXT_PUBLIC_API_URL ||
       "http://localhost:8000/api/v1"
     ).replace(/\/$/, "");
+    this.defaultTenant = defaultTenant;
+  }
+
+  /**
+   * Set default tenant slug for all subsequent requests.
+   */
+  public setTenant(tenantSlug: string): void {
+    this.defaultTenant = tenantSlug;
   }
 
   /**
@@ -95,6 +105,11 @@ export class ApiClient {
     }
 
     const requestHeaders = new Headers(headers);
+
+    const tenantSlug = options.tenant || this.defaultTenant;
+    if (tenantSlug && !requestHeaders.has("X-Tenant-Slug")) {
+      requestHeaders.set("X-Tenant-Slug", tenantSlug);
+    }
 
     if (!requestHeaders.has("Accept")) {
       requestHeaders.set("Accept", "application/json");

@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Middleware\RequestCorrelationMiddleware;
+use App\Http\Middleware\TenantResolutionMiddleware;
 use App\Support\ApiResponse;
+use App\Tenancy\Exceptions\TenantInactiveException;
+use App\Tenancy\Exceptions\TenantNotFoundException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -28,11 +31,34 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(RequestCorrelationMiddleware::class);
+        $middleware->alias([
+            'tenant' => TenantResolutionMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        $exceptions->render(function (TenantNotFoundException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return ApiResponse::error(
+                    code: 'TENANT_NOT_FOUND',
+                    message: $e->getMessage() ?: 'The requested tenant could not be found.',
+                    status: Response::HTTP_NOT_FOUND
+                );
+            }
+        });
+
+        $exceptions->render(function (TenantInactiveException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return ApiResponse::error(
+                    code: 'TENANT_INACTIVE',
+                    message: $e->getMessage() ?: 'The tenant account is currently inactive.',
+                    status: Response::HTTP_FORBIDDEN
+                );
+            }
+        });
 
         $exceptions->render(function (ValidationException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
