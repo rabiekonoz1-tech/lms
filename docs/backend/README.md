@@ -107,7 +107,32 @@ apps/api/
 
 ---
 
-## 6. Identity, Authentication & Authorization (M3)
+## 6. Billing & Entitlements Domain (M7)
+
+- **Domain Models (Tenant Database)**:
+  - `Package`: Commercial offering defining price, billing cycle, and bundle of entitlements.
+  - `PackageEntitlement`: Concrete capability mapped to a package (`ONLINE_ACCESS`, `EXAM_ACCESS`, `LIVE_SESSIONS`).
+  - `PaymentRequest`: Student submission of payment details and proof (`status: pending, approved, rejected`).
+  - `PaymentReviewLog`: Immutable audit trail of review decisions.
+  - `Subscription`: Temporal enrollment agreement activated upon payment approval.
+  - `Entitlement`: Concrete granted capability checked at the application access layer (`student.hasEntitlement()`).
+- **Invariants Enforced**:
+  - `Payment ≠ Subscription`
+  - `Subscription ≠ Entitlement`
+  - `Payment Approval ≠ Authentication`
+  - No `student.is_paid` shortcut column
+  - `Failures default to deny` (SEC-INV-009)
+  - Strict cross-tenant isolation (SEC-INV-001)
+- **Controllers**:
+  - `App\Http\Controllers\Api\Billing\PackageController`
+  - `App\Http\Controllers\Api\Billing\PaymentRequestController`
+  - `App\Http\Controllers\Api\Billing\SubscriptionController`
+  - `App\Http\Controllers\Api\Billing\EntitlementController`
+- **Billing Gate Verified**: Proven via `BillingGateTest` (package creation, payment request submission, review, wrong reviewer rejection, payment approval, subscription activation, entitlement grant, audit logging, duplicate approval rejection, payment rejection, and tenant isolation).
+
+---
+
+## 7. Identity, Authentication & Authorization (M3)
 
 - **Global Student Identity**: Control plane model (`GlobalIdentity`) linking across tenants via `StudentIdentityLink`.
 - **Invariants Enforced**:
@@ -121,7 +146,7 @@ apps/api/
 
 ---
 
-## 7. Tenancy Foundation (M2)
+## 8. Tenancy Foundation (M2)
 
 - **Control Plane**: Manages tenant registry, domain mappings, feature flags, and database allocation.
 - **Dynamic Database Switching**: Managed by `App\Tenancy\TenantDatabaseManager` via connection `'tenant'`.
@@ -131,14 +156,14 @@ apps/api/
 
 ---
 
-## 8. Runtime Foundation & API Contracts (M1)
+## 9. Runtime Foundation & API Contracts (M1)
 
-### 8.1 Request Correlation
+### 9.1 Request Correlation
 - Every incoming request through `RequestCorrelationMiddleware` is assigned a unique `request_id` (propagating an existing `X-Request-ID` header or generating a UUIDv4).
 - The `request_id` is bound to the request attributes and injected into the logging context (`Log::withContext(['request_id' => ...])`).
 - The `request_id` is returned in the `X-Request-ID` response header and inside the `meta.request_id` envelope.
 
-### 8.2 Response & Error Envelope
+### 9.2 Response & Error Envelope
 All API endpoints under `/api/v1` return standardized JSON envelopes matching the approved Phase F specification:
 
 **Success**:
@@ -167,7 +192,7 @@ All API endpoints under `/api/v1` return standardized JSON envelopes matching th
 }
 ```
 
-### 8.3 Centralized Exception Handling
+### 9.3 Centralized Exception Handling
 Configured in `bootstrap/app.php`:
 - `TenantNotFoundException` → 404 `TENANT_NOT_FOUND`
 - `TenantInactiveException` → 403 `TENANT_INACTIVE`
@@ -179,14 +204,14 @@ Configured in `bootstrap/app.php`:
 - `ThrottleRequestsException` → 429 `RATE_LIMIT_EXCEEDED`
 - `Throwable` → 500 `INTERNAL_SERVER_ERROR` (hides internals unless `APP_DEBUG=true`)
 
-### 8.4 Health Check Endpoint
+### 9.4 Health Check Endpoint
 - **URL**: `GET /api/v1/health`
 - **Controller**: `App\Http\Controllers\Api\HealthCheckController`
 - **Output**: Reports database and cache connectivity, application version, and environment.
 
 ---
 
-## 9. Verification & Development Commands
+## 10. Verification & Development Commands
 
 From `apps/api/`:
 

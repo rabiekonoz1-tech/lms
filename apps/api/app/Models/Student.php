@@ -52,4 +52,33 @@ class Student extends TenantModel
     {
         return $this->hasMany(AttendanceRecord::class, 'student_id');
     }
+
+    public function paymentRequests(): HasMany
+    {
+        return $this->hasMany(PaymentRequest::class, 'student_id');
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class, 'student_id');
+    }
+
+    public function entitlements(): HasMany
+    {
+        return $this->hasMany(Entitlement::class, 'student_id');
+    }
+
+    /**
+     * Check if student currently holds a valid, active entitlement for a specific key.
+     */
+    public function hasEntitlement(string $key): bool
+    {
+        return $this->entitlements()
+            ->where('entitlement_key', $key)
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>=', now());
+            })
+            ->exists();
+    }
 }

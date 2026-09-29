@@ -1,7 +1,7 @@
 # Current Project State
 
 Planning/documentation phases A–K have been approved.
-Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), M3 (Identity / Authentication / Authorization), M4 (Education Core), M5 (Classroom & Attendance Core), and M6 (Assessment Domain) have been successfully implemented and verified.
+Milestones M0 (Repository Bootstrap), M1 (Runtime Foundation Core), M2 (Tenancy Foundation), M3 (Identity / Authentication / Authorization), M4 (Education Core), M5 (Classroom & Attendance Core), M6 (Assessment Domain), and M7 (Billing, Packages & Entitlements) have been successfully implemented and verified.
 
 ## Current Mode
 
@@ -9,12 +9,12 @@ IMPLEMENTATION MODE
 
 ## Current Milestone
 
-M6 — Assessment Domain (VERIFIED)  
-Next Milestone: M7 — Billing, Packages & Entitlements
+M7 — Billing, Packages & Entitlements (VERIFIED)  
+Next Milestone: M8 — Credentials & Devices
 
 ## Current Task
 
-M6-001 — Assessment Domain: Assignments, Submissions, Deadlines, Late Tracking, Exams, Questions, Attempts, Answers, Independent Grades, Grade Publication, and Assessment Gate. (COMPLETED & VERIFIED)
+M7-001 — Billing, Packages & Entitlements: Packages, Package Entitlements, Payment Requests, Payment Proof, Payment Review & Approval, Audit Logs, Subscription Activation, Entitlement Grants, and Billing Gate. (COMPLETED & VERIFIED)
 
 ## Completed
 
@@ -62,24 +62,35 @@ M6-001 — Assessment Domain: Assignments, Submissions, Deadlines, Late Tracking
   - Eloquent domain models: `Assignment`, `AssignmentSubmission`, `Exam`, `Question`, `ExamAttempt`, `ExamAnswer`, `Grade`
   - Invariants strictly enforced: `Assessment ownership belongs to tenant`, `Grade model independence`, `Controlled grade publication`
   - Controllers: `AssignmentController`, `ExamController`, `GradeController`
-  - Assessment Gate verified in `AssessmentGateTest` (Phase J §30):
-    - Assignment submission & deadline tracking
-    - Late submission flagging (`is_late = true`)
-    - Duplicate submission blocking (`422 DUPLICATE_SUBMISSION`)
-    - Exam start, question answering, and submission
-    - Duplicate exam attempt blocking (`422 DUPLICATE_ATTEMPT`)
-    - Teacher grading and grade publication control
-    - Student grades visibility strictly controlled by publication state
-    - Backend authorization enforcement (`403 FORBIDDEN` for students attempting to grade)
-    - Cross-tenant assessment isolation verified (`404` and `401`)
+  - Assessment Gate verified in `AssessmentGateTest` (Phase J §30)
+- **M7-001 Billing, Packages & Entitlements**:
+  - Tenant database migration for `packages`, `package_entitlements`, `payment_requests`, `payment_review_logs`, `subscriptions`, and `entitlements`
+  - Eloquent domain models: `Package`, `PackageEntitlement`, `PaymentRequest`, `PaymentReviewLog`, `Subscription`, `Entitlement`
+  - Invariants strictly enforced:
+    - `Payment ≠ Subscription`
+    - `Subscription ≠ Entitlement`
+    - `Payment Approval ≠ Authentication`
+    - No `student.is_paid` shortcut column
+  - Controllers: `PackageController`, `PaymentRequestController`, `SubscriptionController`, `EntitlementController`
+  - Billing Gate verified in `BillingGateTest` (Phase J §33):
+    - Commercial package creation with entitlement mappings
+    - Student payment request submission (`pending`)
+    - Review list and details retrieval
+    - Wrong reviewer authorization check (`403 FORBIDDEN`)
+    - Payment request approval with reviewer attribution
+    - Subscription activation and entitlement granting
+    - Verification that student holds active entitlements (`hasEntitlement()`)
+    - Immutable audit log written to `payment_review_logs`
+    - Duplicate approval prevention (`422 ALREADY_PROCESSED`)
+    - Payment request rejection with reason logging
+    - Cross-tenant payment request isolation (`404` and `401`)
 
 ## In Progress
 
-- Preparation for M7 (Billing, Packages & Entitlements: Packages, Student Submissions, Credentials, Payment Gate)
+- Preparation for M8 (Credentials & Devices: Student Access Credentials, Code/Barcode Generation, Device Binding, Device Replacement, Credential Gate)
 
 ## Pending
 
-- M7 Billing / Entitlements
 - M8 Credentials / Devices
 - M9 Integrations
 - M10 Analytics / Reporting
@@ -94,7 +105,7 @@ None.
 
 ## Verification Evidence
 
-- Backend Tests: `vendor/bin/phpunit` -> 20 tests, 220 assertions passed (AssessmentGateTest, AttendanceGateTest, EducationGateTest, IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
+- Backend Tests: `vendor/bin/phpunit` -> 21 tests, 253 assertions passed (BillingGateTest, AssessmentGateTest, AttendanceGateTest, EducationGateTest, IdentityGateTest, AuthenticationGateTest, AuthorizationGateTest, TenantIsolationTest, TenantResolutionTest, HealthCheckTest, RequestCorrelationTest, ApiExceptionHandlingTest)
 - Backend Linter: `vendor/bin/pint --test` -> Passed (0 violations)
 - Frontend Types: `npx tsc --noEmit` -> Passed (0 errors)
 - Frontend Linter: `npm run lint` -> Passed (0 errors)

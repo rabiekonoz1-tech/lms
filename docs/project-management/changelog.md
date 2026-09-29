@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [M7-001] - 2026-09-29
+### Added
+- Billing, Packages & Entitlements Domain:
+  - Tenant database migration for `packages`, `package_entitlements`, `payment_requests`, `payment_review_logs`, `subscriptions`, and `entitlements` tables
+  - Eloquent domain models: `Package`, `PackageEntitlement`, `PaymentRequest`, `PaymentReviewLog`, `Subscription`, and `Entitlement`
+  - Invariants strictly enforced:
+    - `Payment ≠ Subscription`
+    - `Subscription ≠ Entitlement`
+    - `Payment Approval ≠ Authentication`
+    - No `student.is_paid` shortcut column; student capabilities checked via `hasEntitlement()`
+  - Controllers:
+    - `PackageController`: Commercial package creation and entitlement association
+    - `PaymentRequestController`: Payment submission, review listing, reviewer approval, subscription activation, entitlement granting, and rejection with reason
+    - `SubscriptionController`: Student subscription history inspection
+    - `EntitlementController`: Active student entitlement querying
+  - Billing Gate verified in `BillingGateTest` (Phase J §33):
+    - Commercial package creation with entitlement mappings
+    - Student payment request submission (`pending`)
+    - Review list and details retrieval
+    - Wrong reviewer authorization check (`403 FORBIDDEN`)
+    - Payment request approval with reviewer attribution
+    - Subscription activation and entitlement granting
+    - Verification that student holds active entitlements (`hasEntitlement()`)
+    - Immutable audit log written to `payment_review_logs`
+    - Duplicate approval prevention (`422 ALREADY_PROCESSED`)
+    - Payment request rejection with reason logging
+    - Cross-tenant payment request isolation (`404` and `401`)
+  - Suite: 21 tests, 253 assertions passed (100% pass)
+- Documentation updates:
+  - `docs/domains/billing/README.md`
+  - `docs/backend/README.md`
+  - `docs/project-management/current-state.md`
+  - `docs/project-management/implementation-ledger.md`
+
 ## [M6-001] - 2026-09-29
 ### Added
 - Assessment Domain:

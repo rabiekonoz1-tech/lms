@@ -9,6 +9,10 @@ use App\Http\Controllers\Api\Attendance\SessionController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\MeController;
+use App\Http\Controllers\Api\Billing\EntitlementController;
+use App\Http\Controllers\Api\Billing\PackageController;
+use App\Http\Controllers\Api\Billing\PaymentRequestController;
+use App\Http\Controllers\Api\Billing\SubscriptionController;
 use App\Http\Controllers\Api\Education\CourseController;
 use App\Http\Controllers\Api\Education\EnrollmentController;
 use App\Http\Controllers\Api\Education\LessonController;
@@ -133,5 +137,27 @@ Route::middleware('tenant')->group(function () {
 
         // Assessment - Grades
         Route::get('/students/{studentId}/grades', [GradeController::class, 'studentGrades'])->name('api.students.grades');
+
+        // Billing - Packages
+        Route::get('/packages', [PackageController::class, 'index'])->name('api.packages.index');
+        Route::post('/packages', [PackageController::class, 'store'])
+            ->middleware('tenant.can:packages.create')
+            ->name('api.packages.create');
+        Route::get('/packages/{id}', [PackageController::class, 'show'])->name('api.packages.show');
+
+        // Billing - Payment Requests
+        Route::get('/payment-requests', [PaymentRequestController::class, 'index'])->name('api.payments.index');
+        Route::post('/payment-requests', [PaymentRequestController::class, 'store'])->name('api.payments.store');
+        Route::get('/payment-requests/{id}', [PaymentRequestController::class, 'show'])->name('api.payments.show');
+        Route::post('/payment-requests/{id}/approve', [PaymentRequestController::class, 'approve'])
+            ->middleware('tenant.can:payments.approve')
+            ->name('api.payments.approve');
+        Route::post('/payment-requests/{id}/reject', [PaymentRequestController::class, 'reject'])
+            ->middleware('tenant.can:payments.reject')
+            ->name('api.payments.reject');
+
+        // Billing - Subscriptions & Entitlements
+        Route::get('/students/{studentId}/subscriptions', [SubscriptionController::class, 'index'])->name('api.students.subscriptions');
+        Route::get('/students/{studentId}/entitlements', [EntitlementController::class, 'index'])->name('api.students.entitlements');
     });
 });
