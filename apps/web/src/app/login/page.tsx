@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '../../context/auth-context';
 
@@ -43,7 +43,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
   },
 ];
 
-export default function LoginPage() {
+function LoginForm() {
   const { login, supportLogin, isLoading, error } = useAuth();
 
   const [email, setEmail]           = useState('student@almustaqbal.edu');
@@ -235,5 +235,17 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
