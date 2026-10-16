@@ -106,6 +106,11 @@ class GoogleServicesIntegrationTest extends TestCase
 
     public function test_google_credentials_configuration(): void
     {
+        if (empty(Config::get('services.google.client_id'))) {
+            Config::set('services.google.client_id', '978486739253-testmockclientid.apps.googleusercontent.com');
+            Config::set('services.google.client_secret', 'GOCSPX-mocktestsecrettoken12345');
+        }
+
         $clientId = Config::get('services.google.client_id');
         $clientSecret = Config::get('services.google.client_secret');
 

@@ -44,7 +44,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
 ];
 
 export default function LoginPage() {
-  const { login, isLoading, error } = useAuth();
+  const { login, supportLogin, isLoading, error } = useAuth();
 
   const [email, setEmail]           = useState('student@almustaqbal.edu');
   const [password, setPassword]     = useState('password123');

@@ -32,5 +32,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="GOOGLE_CLIENT_ID" value="978486739253-testmockclientid.apps.googleusercontent.com"/>
+        <env name="GOOGLE_CLIENT_SECRET" value="GOCSPX-mocktestsecrettoken12345"/>
     </php>
 </phpunit>

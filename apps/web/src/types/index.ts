@@ -131,7 +131,18 @@ export interface AssignmentSubmission {
   student_id: string;
   content?: string;
   score?: number;
+  feedback?: string;
   status: 'submitted' | 'graded';
+  submitted_at?: string;
+  is_late?: boolean;
+  student?: {
+    id: string;
+    user?: {
+      id?: string;
+      name?: string;
+      email?: string;
+    };
+  };
 }
 
 export interface Exam {

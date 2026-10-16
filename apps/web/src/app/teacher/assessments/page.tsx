@@ -350,11 +350,11 @@ export default function TeacherAssessmentsPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h4 className="text-sm font-bold text-white">{sub.student?.user?.name || 'طالب غير معروف'}</h4>
-                          {sub.is_late && <Badge variant="destructive">متأخر</Badge>}
+                          {sub.is_late && <Badge variant="danger">متأخر</Badge>}
                           {sub.status === 'graded' ? <Badge variant="success">تم التقييم</Badge> : <Badge variant="info">بانتظار التقييم</Badge>}
                         </div>
                         <p className="text-[11px] text-secondary mt-1">
-                          تاريخ التسليم: {new Date(sub.submitted_at).toLocaleString('ar-EG')}
+                          تاريخ التسليم: {sub.submitted_at ? new Date(sub.submitted_at).toLocaleString('ar-EG') : '—'}
                         </p>
                         {sub.status === 'graded' && (
                           <p className="text-[11px] text-emerald-400 mt-1 font-mono">
