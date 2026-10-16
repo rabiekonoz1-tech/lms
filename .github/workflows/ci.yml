@@ -175,6 +175,10 @@ jobs:
           DEPLOY_USER:     ${{ secrets.DEPLOY_USER }}
           IMAGE_TAG:       ${{ github.sha }}
         run: |
+          if [ -z "$DEPLOY_HOST" ] || [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "::notice ::Production deployment secrets (DEPLOY_HOST / DEPLOY_SSH_KEY) are not configured yet. Skipping SSH deployment."
+            exit 0
+          fi
           echo "$SSH_PRIVATE_KEY" > /tmp/deploy_key
           chmod 600 /tmp/deploy_key
           ssh -o StrictHostKeyChecking=no -i /tmp/deploy_key \
