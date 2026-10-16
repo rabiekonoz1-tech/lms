@@ -7,9 +7,13 @@ export interface Tenant {
   name: string;
   slug: string;
   type: string;
-  status: 'active' | 'suspended' | 'provisioning';
-  logo_url?: string;
-  primary_color?: string;
+  auth_mode?: 'password' | 'coupon' | 'hybrid';
+  status: 'active' | 'suspended' | 'provisioning' | 'archived';
+  logo_url?: string | null;
+  primary_color?: string | null;
+  secondary_color?: string | null;
+  brand_tagline?: string | null;
+  brand_settings?: Record<string, unknown> | null;
 }
 
 export interface TenantUser {
@@ -156,10 +160,14 @@ export interface Meeting {
   provider: 'google_meet' | 'zoom' | 'mock';
   external_meeting_id: string;
   join_url: string;
+  host_url?: string;
   passcode?: string;
   start_time?: string;
   duration_minutes: number;
   status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+  course_id?: string;
+  session_id?: string;
+  course?: Course;
 }
 
 export interface MediaAsset {
@@ -167,10 +175,17 @@ export interface MediaAsset {
   title: string;
   provider: string;
   external_media_id: string;
+  media_type?: 'video' | 'audio' | 'document' | string;
   embed_url?: string;
   playback_url?: string;
-  status: string;
+  status: 'uploading' | 'processing' | 'ready' | 'failed' | string;
   duration_seconds?: number;
+  size_bytes?: number;
+  course_id?: string;
+  lesson_id?: string;
+  course?: Course;
+  lesson?: Lesson;
+  created_at?: string;
 }
 
 export interface StudentAnalyticsSnapshot {

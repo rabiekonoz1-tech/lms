@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Assessment\GradeController;
 use App\Http\Controllers\Api\Attendance\AttendanceController;
 use App\Http\Controllers\Api\Attendance\ClassController;
 use App\Http\Controllers\Api\Attendance\SessionController;
+use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\MeController;
@@ -20,10 +21,14 @@ use App\Http\Controllers\Api\Education\CourseController;
 use App\Http\Controllers\Api\Education\EnrollmentController;
 use App\Http\Controllers\Api\Education\LessonController;
 use App\Http\Controllers\Api\Education\StudentController;
+use App\Http\Controllers\Api\Education\StudentUnifiedOverviewController;
 use App\Http\Controllers\Api\HealthCheckController;
 use App\Http\Controllers\Api\Integration\MediaController;
 use App\Http\Controllers\Api\Integration\MeetingController;
 use App\Http\Controllers\Api\Integration\WebhookController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\Platform\SupportAccessController;
+use App\Http\Controllers\Api\Platform\TenantController;
 use App\Http\Controllers\Api\Reporting\ReportController;
 use App\Http\Controllers\Api\TenantCurrentController;
 use Illuminate\Support\Facades\Route;
@@ -41,16 +46,42 @@ use Illuminate\Support\Facades\Route;
 // Public platform endpoints
 Route::get('/health', HealthCheckController::class)->name('api.health');
 
+// Platform Administration (Global endpoints)
+Route::prefix('tenants')->group(function () {
+    Route::get('/', [TenantController::class, 'index'])->name('api.platform.tenants.index');
+    Route::post('/', [TenantController::class, 'store'])->name('api.platform.tenants.store');
+    Route::get('/{id}', [TenantController::class, 'show'])->name('api.platform.tenants.show');
+    Route::put('/{id}', [TenantController::class, 'update'])->name('api.platform.tenants.update');
+
+    // Support Access
+    Route::post('/{id}/support-access', [SupportAccessController::class, 'generateToken'])->name('api.platform.tenants.support_access');
+});
+
+// Platform Centralized Audit Logs
+Route::get('/platform/audit-logs', [App\Http\Controllers\Api\Platform\AuditLogController::class, 'index'])->name('api.platform.audit_logs.index');
+
 // Tenant-scoped endpoints (protected by TenantResolutionMiddleware)
-Route::middleware('tenant')->group(function () {
+Route::middleware(['tenant', 'throttle:api'])->group(function () {
     Route::get('/tenant/current', TenantCurrentController::class)->name('api.tenant.current');
 
-    // Tenant Authentication endpoints
-    Route::post('/auth/login', LoginController::class)->name('api.auth.login');
+    // Tenant Authentication endpoints (throttled to 10/min)
+    Route::post('/auth/login', LoginController::class)
+        ->middleware('throttle:auth')
+        ->name('api.auth.login');
 
     Route::middleware('tenant.auth')->group(function () {
         Route::get('/auth/me', MeController::class)->name('api.auth.me');
         Route::post('/auth/logout', LogoutController::class)->name('api.auth.logout');
+
+        // Centralized Tenant Audit Logs
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('api.audit_logs.index');
+
+        // Notifications
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [NotificationController::class, 'index'])->name('api.notifications.index');
+            Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('api.notifications.read_all');
+            Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('api.notifications.read');
+        });
 
         // Education - Courses
         Route::get('/courses', [CourseController::class, 'index'])->name('api.courses.index');
@@ -80,7 +111,9 @@ Route::middleware('tenant')->group(function () {
         Route::get('/students/{studentId}/enrollments', [EnrollmentController::class, 'studentEnrollments'])->name('api.students.enrollments');
 
         // Education - Students
+        Route::get('/students', [StudentController::class, 'index'])->name('api.students.index');
         Route::get('/students/{id}', [StudentController::class, 'show'])->name('api.students.show');
+        Route::get('/student/academies', StudentUnifiedOverviewController::class)->name('api.student.academies');
 
         // Attendance - Classes
         Route::get('/classes', [ClassController::class, 'index'])->name('api.classes.index');
@@ -116,6 +149,9 @@ Route::middleware('tenant')->group(function () {
             ->middleware('tenant.can:assignments.create')
             ->name('api.assignments.create');
         Route::get('/courses/{courseId}/assignments/{id}', [AssignmentController::class, 'show'])->name('api.assignments.show');
+        Route::get('/courses/{courseId}/assignments/{id}/submissions', [AssignmentController::class, 'submissions'])
+            ->middleware('tenant.can:assignments.grade')
+            ->name('api.assignments.submissions');
         Route::post('/courses/{courseId}/assignments/{id}/submit', [AssignmentController::class, 'submit'])->name('api.assignments.submit');
         Route::post('/courses/{courseId}/assignments/{id}/submissions/{submissionId}/grade', [AssignmentController::class, 'grade'])
             ->middleware('tenant.can:assignments.grade')
@@ -173,7 +209,9 @@ Route::middleware('tenant')->group(function () {
             ->middleware('tenant.can:credentials.create')
             ->name('api.credentials.store');
         Route::post('/credentials/{id}/activate', [CredentialController::class, 'activate'])->name('api.credentials.activate');
-        Route::post('/credentials/verify', [CredentialController::class, 'verify'])->name('api.credentials.verify');
+        Route::post('/credentials/verify', [CredentialController::class, 'verify'])
+            ->middleware('throttle:auth')
+            ->name('api.credentials.verify');
         Route::post('/credentials/{id}/replace-device', [CredentialController::class, 'replaceDevice'])
             ->middleware('tenant.can:credentials.manage_devices')
             ->name('api.credentials.replace_device');

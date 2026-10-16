@@ -13,7 +13,44 @@ use Illuminate\Http\Request;
 class StudentController extends Controller
 {
     /**
+     * List all students in the tenant.
+     * Requires 'students.view' permission.
+     */
+    public function index(Request $request): JsonResponse
+    {
+        /** @var TenantUser $user */
+        $user = $request->user();
+
+        if (! $user->hasPermissionTo('students.view')) {
+            throw new AuthorizationException('Forbidden. You do not have permission to view student data.');
+        }
+
+        $query = Student::with(['user', 'parents', 'enrollments.course']);
+
+        if ($request->filled('grade_level')) {
+            $query->where('grade_level', $request->grade_level);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('student_code', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $students = $query->get();
+
+        return ApiResponse::success(['students' => $students]);
+    }
+
+    /**
      * Show student profile and details.
+
      * Enforces:
      * - The student themselves can view their details.
      * - Staff with 'students.view' permission can view.

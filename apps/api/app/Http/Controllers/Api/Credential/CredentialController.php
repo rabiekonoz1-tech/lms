@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Credential;
 
+use App\Domain\Credentials\Services\CredentialLifecycleService;
 use App\Http\Controllers\Controller;
 use App\Models\AccessCredential;
 use App\Models\Student;
@@ -39,7 +40,7 @@ class CredentialController extends Controller
     /**
      * Generate / Issue a new access credential.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, CredentialLifecycleService $lifecycleService): JsonResponse
     {
         $validated = $request->validate([
             'student_id' => 'required|uuid|exists:tenant.students,id',
@@ -52,7 +53,7 @@ class CredentialController extends Controller
         /** @var TenantUser $user */
         $user = $request->user();
 
-        $generated = AccessCredential::generate($student, $user, $expiresAt);
+        $generated = $lifecycleService->issueCredential($student, $user, $expiresAt);
 
         return ApiResponse::success([
             'credential' => $generated['credential'],
@@ -166,7 +167,7 @@ class CredentialController extends Controller
     /**
      * Replace device binding (Authorized staff action).
      */
-    public function replaceDevice(Request $request, string $id): JsonResponse
+    public function replaceDevice(Request $request, string $id, CredentialLifecycleService $lifecycleService): JsonResponse
     {
         $credential = AccessCredential::findOrFail($id);
 
@@ -180,11 +181,12 @@ class CredentialController extends Controller
         /** @var TenantUser $user */
         $user = $request->user();
 
-        $newBinding = $credential->replaceDevice(
+        $newBinding = $lifecycleService->replaceDevice(
+            $credential,
+            $user,
             $validated['new_device_id'],
             $validated['new_device_fingerprint'],
             $validated['reason'],
-            $user,
             $validated['new_device_name'] ?? null
         );
 
@@ -198,7 +200,7 @@ class CredentialController extends Controller
     /**
      * Revoke credential.
      */
-    public function revoke(Request $request, string $id): JsonResponse
+    public function revoke(Request $request, string $id, CredentialLifecycleService $lifecycleService): JsonResponse
     {
         $credential = AccessCredential::findOrFail($id);
 
@@ -206,10 +208,10 @@ class CredentialController extends Controller
             'reason' => 'required|string|max:500',
         ]);
 
-        $credential->revoke($validated['reason']);
+        $revoked = $lifecycleService->revoke($credential, $request->user(), $validated['reason']);
 
         return ApiResponse::success([
-            'credential' => $credential->fresh(),
+            'credential' => $revoked,
             'message' => 'Credential revoked successfully.',
         ]);
     }

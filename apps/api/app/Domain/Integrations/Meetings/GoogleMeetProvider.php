@@ -5,7 +5,6 @@ namespace App\Domain\Integrations\Meetings;
 use App\Domain\Integrations\Contracts\MeetingProviderInterface;
 use App\Domain\Integrations\DTOs\MeetingRequest;
 use App\Domain\Integrations\DTOs\MeetingResponse;
-use Illuminate\Support\Str;
 
 class GoogleMeetProvider implements MeetingProviderInterface
 {
@@ -16,11 +15,14 @@ class GoogleMeetProvider implements MeetingProviderInterface
 
     public function createMeeting(MeetingRequest $request): MeetingResponse
     {
-        // Google Meet space/meeting code format: aaa-bbbb-ccc
-        $part1 = Str::lower(Str::random(3));
-        $part2 = Str::lower(Str::random(4));
-        $part3 = Str::lower(Str::random(3));
-        $spaceCode = "{$part1}-{$part2}-{$part3}";
+        $customCode = $request->settings['meeting_code'] ?? $request->settings['meet_url'] ?? null;
+        if (! empty($customCode)) {
+            $spaceCode = $this->extractMeetingCode((string) $customCode);
+        } else {
+            $spaceCode = $this->generateSpaceCode();
+        }
+
+        $clientId = config('services.google.client_id');
 
         return new MeetingResponse(
             externalMeetingId: $spaceCode,
@@ -32,8 +34,44 @@ class GoogleMeetProvider implements MeetingProviderInterface
                 'spaceUri' => "https://meet.google.com/{$spaceCode}",
                 'meetingCode' => $spaceCode,
                 'conferenceRecord' => 'spaces/'.$spaceCode,
+                'client_id_configured' => ! empty($clientId),
+                'google_service' => 'meet',
             ]
         );
+    }
+
+    /**
+     * Generate Google Meet compliant alpha-only space code: aaa-bbbb-ccc
+     */
+    public function generateSpaceCode(): string
+    {
+        $letters = 'abcdefghijklmnopqrstuvwxyz';
+        $gen = function (int $len) use ($letters) {
+            $res = '';
+            for ($i = 0; $i < $len; $i++) {
+                $res .= $letters[random_int(0, 25)];
+            }
+
+            return $res;
+        };
+
+        return "{$gen(3)}-{$gen(4)}-{$gen(3)}";
+    }
+
+    /**
+     * Extract clean Google Meet code from input string or URL.
+     */
+    public function extractMeetingCode(string $input): string
+    {
+        $input = trim($input);
+        if (preg_match('#meet\.google\.com/([a-z]{3}-[a-z]{4}-[a-z]{3})#i', $input, $matches)) {
+            return strtolower($matches[1]);
+        }
+        if (preg_match('#^[a-z]{3}-[a-z]{4}-[a-z]{3}$#i', $input)) {
+            return strtolower($input);
+        }
+
+        return $input;
     }
 
     public function getJoinUrl(string $externalMeetingId, array $userContext = []): string

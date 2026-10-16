@@ -1,116 +1,171 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { TenantUser } from '../types';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from 'react';
+import { useRouter } from 'next/navigation';
+import type { TenantUser } from '../types';
 import { apiClient } from '../lib/api-client';
+import { tokenStore } from '../lib/token-store';
+import { login as apiLogin, logout as apiLogout, fetchMe } from '../lib/auth-api';
 
-export type UserRole = 'student' | 'teacher' | 'parent';
+export type UserRole = 'student' | 'teacher' | 'parent' | 'admin';
 
-export const DEMO_USERS: Record<UserRole, TenantUser> = {
-  student: {
-    id: 'usr-student-001',
-    name: 'عمر الأحمد (Omar Al-Ahmad)',
-    email: 'omar@almustaqbal.edu.sa',
-    type: 'student',
-    status: 'active',
-    student: {
-      id: 'stu-001',
-      user_id: 'usr-student-001',
-      student_code: 'STU-2026-001',
-      grade_level: 'الصف الثالث الثانوي',
-      status: 'active',
-    },
-    roles: [
-      {
-        id: 'rol-stu',
-        name: 'student',
-        label: 'طالب (Student)',
-      },
-    ],
-  },
-  teacher: {
-    id: 'usr-teacher-001',
-    name: 'د. طارق منصور (Dr. Tariq Mansour)',
-    email: 'tariq@almustaqbal.edu.sa',
-    type: 'staff',
-    status: 'active',
-    staff: {
-      id: 'stf-001',
-      user_id: 'usr-teacher-001',
-      staff_type: 'teacher',
-      status: 'active',
-    },
-    roles: [
-      {
-        id: 'rol-tch',
-        name: 'teacher',
-        label: 'معلم أول (Senior Teacher)',
-      },
-    ],
-  },
-  parent: {
-    id: 'usr-parent-001',
-    name: 'أبو عمر الأحمد (Abu Omar)',
-    email: 'parent@almustaqbal.edu.sa',
-    type: 'parent',
-    status: 'active',
-    parent: {
-      id: 'par-001',
-      user_id: 'usr-parent-001',
-      status: 'active',
-    },
-    roles: [
-      {
-        id: 'rol-par',
-        name: 'parent',
-        label: 'ولي أمر (Parent)',
-      },
-    ],
-  },
-};
-
-interface AuthContextType {
-  user: TenantUser;
-  currentRole: UserRole;
-  switchRole: (role: UserRole) => void;
+export interface AuthContextType {
+  user: TenantUser | null;
+  currentRole: UserRole | null;
   token: string | null;
+  tenantSlug: string | null;
   isAuthenticated: boolean;
-  logout: () => void;
+  isLoading: boolean;
+  error: string | null;
+  login: (email: string, password: string, tenantSlug: string) => Promise<void>;
+  supportLogin: (token: string, tenantSlug: string) => Promise<void>;
+  logout: () => Promise<void>;
+  switchRole: (role: UserRole) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function resolveRole(user: TenantUser): UserRole {
+  const firstRole = user.roles?.[0] as unknown;
+  const roleName = (typeof firstRole === 'string' ? firstRole : (firstRole as { name?: string })?.name ?? '').toLowerCase();
+  if (roleName.includes('admin') || roleName.includes('platform')) return 'admin';
+  if (roleName.includes('teacher') || user.type === 'staff') return 'teacher';
+  if (roleName.includes('parent') || user.type === 'parent') return 'parent';
+  return 'student';
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentRole, setCurrentRole] = useState<UserRole>('student');
-  const [token, setToken] = useState<string | null>('demo_bearer_token_2026_xyz');
+  const router = useRouter();
+  const [user, setUser] = useState<TenantUser | null>(null);
+  const [currentRole, setCurrentRole] = useState<UserRole | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [tenantSlug, setTenantSlug] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const user = DEMO_USERS[currentRole];
-
+  // On mount — restore session from localStorage
   useEffect(() => {
-    apiClient.setToken(token);
-  }, [token]);
+    const restore = async () => {
+      const storedToken = tokenStore.getToken();
+      const storedTenant = tokenStore.getTenant();
 
-  const switchRole = (role: UserRole) => {
-    setCurrentRole(role);
-    const mockToken = `demo_token_${role}_${Date.now()}`;
-    setToken(mockToken);
-    apiClient.setToken(mockToken);
-  };
+      if (!storedToken || !storedTenant) {
+        setIsLoading(false);
+        return;
+      }
 
-  const logout = () => {
+      try {
+        apiClient.setToken(storedToken);
+        apiClient.setTenant(storedTenant);
+        const me = await fetchMe();
+        setUser(me);
+        setToken(storedToken);
+        setTenantSlug(storedTenant);
+        setCurrentRole(resolveRole(me));
+      } catch {
+        // Session invalid — clear
+        tokenStore.clearAll();
+        apiClient.setToken(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    restore();
+  }, []);
+
+  const login = useCallback(async (email: string, password: string, slug: string) => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const result = await apiLogin({ email, password, tenantSlug: slug });
+      setUser(result.user);
+      setToken(result.token);
+      setTenantSlug(slug);
+      const role = resolveRole(result.user);
+      setCurrentRole(role);
+      tokenStore.setRole(role);
+
+      // Navigate by role
+      if (role === 'admin') router.push('/platform/dashboard');
+      else if (role === 'teacher') router.push('/teacher/dashboard');
+      else if (role === 'parent') router.push('/parent/dashboard');
+      else router.push('/student/dashboard');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'فشل تسجيل الدخول';
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]);
+
+  const supportLogin = useCallback(async (supportToken: string, slug: string) => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      apiClient.setToken(supportToken);
+      apiClient.setTenant(slug);
+      tokenStore.setToken(supportToken);
+      tokenStore.setTenant(slug);
+
+      const me = await fetchMe();
+      setUser(me);
+      setToken(supportToken);
+      setTenantSlug(slug);
+      
+      const role = resolveRole(me);
+      setCurrentRole(role);
+      tokenStore.setRole(role);
+
+      // Navigate to platform or teacher dashboard for support
+      router.push('/platform/dashboard');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'فشل تسجيل الدخول كدعم فني';
+      setError(msg);
+      tokenStore.clearAll();
+      apiClient.setToken(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]);
+
+  const logout = useCallback(async () => {
+    setIsLoading(true);
+    await apiLogout();
+    setUser(null);
     setToken(null);
-    apiClient.setToken(null);
-  };
+    setTenantSlug(null);
+    setCurrentRole(null);
+    setIsLoading(false);
+    router.push('/login');
+  }, [router]);
+
+  const switchRole = useCallback((role: UserRole) => {
+    setCurrentRole(role);
+    tokenStore.setRole(role);
+    router.push(`/${role}/dashboard`);
+  }, [router]);
 
   return (
     <AuthContext.Provider
       value={{
         user,
         currentRole,
-        switchRole,
         token,
-        isAuthenticated: !!token,
+        tenantSlug,
+        isAuthenticated: !!token && !!user,
+        isLoading,
+        error,
+        login,
+        supportLogin,
         logout,
+        switchRole,
       }}
     >
       {children}

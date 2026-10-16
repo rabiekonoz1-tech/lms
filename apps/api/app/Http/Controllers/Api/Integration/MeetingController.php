@@ -54,6 +54,8 @@ class MeetingController extends Controller
             'course_id' => 'nullable|uuid|exists:tenant.courses,id',
             'session_id' => 'nullable|uuid|exists:tenant.sessions,id',
             'host_staff_id' => 'nullable|uuid|exists:tenant.staff,id',
+            'meeting_code' => 'nullable|string|max:255',
+            'meet_url' => 'nullable|string|max:500',
             'settings' => 'nullable|array',
             'enable_failover' => 'nullable|boolean',
         ]);
@@ -67,6 +69,13 @@ class MeetingController extends Controller
                     'idempotent' => true,
                 ], Response::HTTP_OK);
             }
+        }
+
+        if (! empty($validated['meeting_code']) || ! empty($validated['meet_url'])) {
+            $validated['settings'] = array_merge($validated['settings'] ?? [], [
+                'meeting_code' => $validated['meeting_code'] ?? null,
+                'meet_url' => $validated['meet_url'] ?? null,
+            ]);
         }
 
         $meetingRequest = MeetingRequest::fromArray($validated);

@@ -1,47 +1,72 @@
 @import "tailwindcss";
 
-:root {
-  --background: #030712;
-  --foreground: #f9fafb;
+@theme {
+  --font-sans: 'IBM Plex Sans Arabic', 'IBM Plex Sans', Tahoma, sans-serif;
+  
+  --color-primary: var(--brand-primary, var(--pri));
+  --color-primary-foreground: var(--on);
+  --color-secondary: var(--mut);
+  --color-accent: var(--acc);
+  --color-destructive: var(--red);
+  --color-sidebar: var(--sb);
+  --color-turquoise: var(--tq);
+
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-card: var(--card);
+  --color-border: var(--line);
+  --color-muted: var(--mut-bg);
+  --color-muted-foreground: var(--mut);
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  overflow-x: hidden;
-}
-
-/* Custom scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #030712;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1f2937;
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #374151;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
+@layer base {
+  :root {
+    --bg: #F8FAFC;
+    --card: #FFFFFF;
+    --ink: #0F172A;
+    --mut: #64748B;
+    --mut-bg: #F1F5F9;
+    --pri: #04C3C9;
+    --sb: #FFFFFF;
+    --acc: #F59E0B;
+    --red: #EF4444;
+    --tq: #0284C7;
+    --line: #E2E8F0;
+    --on: #FFFFFF;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  [data-theme="dark"] {
+    --bg: #0B132B;
+    --card: #1C2541;
+    --ink: #F8FAFC;
+    --mut: #94A3B8;
+    --mut-bg: #1E293B;
+    --pri: #04C3C9;
+    --sb: #111D4A;
+    --acc: #F59E0B;
+    --red: #F87171;
+    --tq: #38BDF8;
+    --line: #334155;
+    --on: #0B132B;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+
+  * {
+    border-color: var(--line);
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@utility sadu {
+  height: 14px;
+  background: linear-gradient(135deg, var(--red) 25%, transparent 25%) -7px 0,
+              linear-gradient(225deg, var(--red) 25%, transparent 25%) -7px 0,
+              linear-gradient(315deg, var(--acc) 25%, transparent 25%),
+              linear-gradient(45deg, var(--acc) 25%, transparent 25%);
+  background-size: 14px 14px;
 }

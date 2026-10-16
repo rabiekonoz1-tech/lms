@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\TenantUser;
 use App\Support\ApiResponse;
+use App\Support\Authorization\AbacEngine;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -108,6 +109,14 @@ class CourseController extends Controller
     public function update(Request $request, string $id): JsonResponse
     {
         $course = Course::findOrFail($id);
+
+        /** @var TenantUser $user */
+        $user = $request->user();
+
+        $abacEngine = app(AbacEngine::class);
+        if (! $abacEngine->authorize($user, 'courses.update', $course)) {
+            throw new AuthorizationException('Forbidden. Denied by ABAC policy.');
+        }
 
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\TenantUser;
+use App\Support\Authorization\AbacEngine;
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
@@ -21,9 +22,11 @@ class TenantAuthorize
             throw new AuthorizationException('This action requires an authenticated tenant user.');
         }
 
-        if (! $user->hasPermissionTo($permission)) {
+        $abacEngine = app(AbacEngine::class);
+
+        if (! $abacEngine->authorize($user, $permission)) {
             throw new AuthorizationException(
-                sprintf('Forbidden. Missing required permission [%s].', $permission)
+                sprintf('Forbidden. Missing required permission or denied by policy [%s].', $permission)
             );
         }
 

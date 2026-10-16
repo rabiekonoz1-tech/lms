@@ -3,52 +3,80 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Tenant } from '../types';
 import { apiClient } from '../lib/api-client';
-
-export const DEMO_TENANTS: Tenant[] = [
-  {
-    id: '01a0e000-0000-7000-8000-000000000001',
-    name: 'أكاديمية المستقبل التعليمية (Al-Mustaqbal Academy)',
-    slug: 'almustaqbal',
-    type: 'educational_center',
-    status: 'active',
-    primary_color: '#059669',
-  },
-  {
-    id: '01a0e000-0000-7000-8000-000000000002',
-    name: 'مركز الأمل للتدريب (Al-Amal Center)',
-    slug: 'al-amal',
-    type: 'school',
-    status: 'active',
-    primary_color: '#4f46e5',
-  },
-];
+import { platformApi } from '../lib/platform-api';
 
 interface TenantContextType {
-  currentTenant: Tenant;
+  currentTenant: Tenant | null;
   setTenantSlug: (slug: string) => void;
+  updateCurrentTenantBranding: (branding: Partial<Tenant>) => Promise<void>;
   availableTenants: Tenant[];
+  loading: boolean;
 }
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
 export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentTenant, setCurrentTenant] = useState<Tenant>(DEMO_TENANTS[0]);
+  const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
+  const [availableTenants, setAvailableTenants] = useState<Tenant[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  // Apply White-Label dynamic branding to CSS variables whenever currentTenant changes
   useEffect(() => {
-    // Initial sync
-    apiClient.setTenant(currentTenant.slug);
+    if (typeof window !== 'undefined' && currentTenant) {
+      const primary = currentTenant.primary_color || '#04c3c9';
+      const secondary = currentTenant.secondary_color || '#0284c7';
+      document.documentElement.style.setProperty('--brand-primary', primary);
+      document.documentElement.style.setProperty('--brand-secondary', secondary);
+      if (currentTenant.name) {
+        document.title = `${currentTenant.name} — مدار للتعليم`;
+      }
+    }
   }, [currentTenant]);
 
+  useEffect(() => {
+    const fetchTenants = async () => {
+      try {
+        setLoading(true);
+        const tenants = await platformApi.getTenants();
+        setAvailableTenants(tenants);
+        if (tenants.length > 0) {
+            setCurrentTenant(tenants[0]);
+            apiClient.setTenant(tenants[0].slug);
+        }
+      } catch {
+        // Fallback or handle error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTenants();
+  }, []);
+
   const setTenantSlug = (slug: string) => {
-    const found = DEMO_TENANTS.find((t) => t.slug === slug);
+    const found = availableTenants.find((t) => t.slug === slug);
     if (found) {
       setCurrentTenant(found);
       apiClient.setTenant(found.slug);
+    } else {
+        // fallback if manually typing a slug that isn't loaded
+        apiClient.setTenant(slug);
+    }
+  };
+
+  const updateCurrentTenantBranding = async (branding: Partial<Tenant>) => {
+    if (!currentTenant) return;
+    try {
+      const updated = await platformApi.updateTenant(currentTenant.id, branding);
+      setCurrentTenant(updated);
+      setAvailableTenants(prev => prev.map(t => t.id === updated.id ? updated : t));
+    } catch (e) {
+      // Optimistic fallback
+      setCurrentTenant(prev => prev ? { ...prev, ...branding } : null);
     }
   };
 
   return (
-    <TenantContext.Provider value={{ currentTenant, setTenantSlug, availableTenants: DEMO_TENANTS }}>
+    <TenantContext.Provider value={{ currentTenant, setTenantSlug, updateCurrentTenantBranding, availableTenants, loading }}>
       {children}
     </TenantContext.Provider>
   );

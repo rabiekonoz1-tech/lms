@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api\Billing;
 
+use App\Domain\Billing\Services\PaymentReviewService;
 use App\Http\Controllers\Controller;
 use App\Models\Entitlement;
 use App\Models\Package;
 use App\Models\PaymentRequest;
-use App\Models\PaymentReviewLog;
 use App\Models\Subscription;
 use App\Models\TenantUser;
 use App\Support\ApiResponse;
@@ -109,107 +109,52 @@ class PaymentRequestController extends Controller
      * - Grants Entitlements (Subscription ≠ Entitlement)
      * - Records Audit Log
      */
-    public function approve(Request $request, string $id): JsonResponse
+    public function approve(Request $request, string $id, PaymentReviewService $reviewService): JsonResponse
     {
         $paymentRequest = PaymentRequest::with('package.entitlements')->findOrFail($id);
 
-        if (! $paymentRequest->isPending()) {
+        try {
+            $result = $reviewService->approve($paymentRequest, $request->user(), $request->input('notes'));
+
+            return ApiResponse::success([
+                'payment_request' => $result['payment_request'],
+                'subscription' => $result['subscription'],
+                'entitlements' => $result['entitlements'],
+                'message' => 'Payment approved, subscription activated, and entitlements granted successfully.',
+            ]);
+        } catch (\DomainException $e) {
             return ApiResponse::error(
                 'ALREADY_PROCESSED',
-                'This payment request has already been processed (current status: '.$paymentRequest->status.').',
+                $e->getMessage(),
                 Response::HTTP_UNPROCESSABLE_ENTITY
             );
         }
-
-        /** @var TenantUser $user */
-        $user = $request->user();
-
-        // 1. Update PaymentRequest
-        $paymentRequest->update([
-            'status' => 'approved',
-            'reviewed_by_user_id' => $user->id,
-            'reviewed_at' => now(),
-        ]);
-
-        // 2. Record Audit Log
-        PaymentReviewLog::create([
-            'payment_request_id' => $paymentRequest->id,
-            'reviewed_by_user_id' => $user->id,
-            'action' => 'approved',
-            'reason' => $request->input('notes', 'Payment approved after verification.'),
-            'logged_at' => now(),
-        ]);
-
-        // 3. Activate Subscription (Payment ≠ Subscription)
-        $subscription = Subscription::create([
-            'student_id' => $paymentRequest->student_id,
-            'package_id' => $paymentRequest->package_id,
-            'payment_request_id' => $paymentRequest->id,
-            'status' => 'active',
-            'starts_at' => now(),
-            'ends_at' => now()->addMonth(),
-        ]);
-
-        // 4. Grant Entitlements (Subscription ≠ Entitlement)
-        $grantedEntitlements = [];
-        foreach ($paymentRequest->package->entitlements as $pkgEntitlement) {
-            $grantedEntitlements[] = Entitlement::create([
-                'student_id' => $paymentRequest->student_id,
-                'subscription_id' => $subscription->id,
-                'entitlement_key' => $pkgEntitlement->entitlement_key,
-                'is_active' => true,
-                'expires_at' => $subscription->ends_at,
-            ]);
-        }
-
-        return ApiResponse::success([
-            'payment_request' => $paymentRequest->fresh(),
-            'subscription' => $subscription,
-            'entitlements' => $grantedEntitlements,
-            'message' => 'Payment approved, subscription activated, and entitlements granted successfully.',
-        ]);
     }
 
     /**
      * Reject payment request.
      */
-    public function reject(Request $request, string $id): JsonResponse
+    public function reject(Request $request, string $id, PaymentReviewService $reviewService): JsonResponse
     {
         $paymentRequest = PaymentRequest::findOrFail($id);
-
-        if (! $paymentRequest->isPending()) {
-            return ApiResponse::error(
-                'ALREADY_PROCESSED',
-                'This payment request has already been processed (current status: '.$paymentRequest->status.').',
-                Response::HTTP_UNPROCESSABLE_ENTITY
-            );
-        }
 
         $validated = $request->validate([
             'reason' => 'required|string|max:1000',
         ]);
 
-        /** @var TenantUser $user */
-        $user = $request->user();
+        try {
+            $rejected = $reviewService->reject($paymentRequest, $request->user(), $validated['reason']);
 
-        $paymentRequest->update([
-            'status' => 'rejected',
-            'rejection_reason' => $validated['reason'],
-            'reviewed_by_user_id' => $user->id,
-            'reviewed_at' => now(),
-        ]);
-
-        PaymentReviewLog::create([
-            'payment_request_id' => $paymentRequest->id,
-            'reviewed_by_user_id' => $user->id,
-            'action' => 'rejected',
-            'reason' => $validated['reason'],
-            'logged_at' => now(),
-        ]);
-
-        return ApiResponse::success([
-            'payment_request' => $paymentRequest->fresh(),
-            'message' => 'Payment request rejected.',
-        ]);
+            return ApiResponse::success([
+                'payment_request' => $rejected,
+                'message' => 'Payment request rejected.',
+            ]);
+        } catch (\DomainException $e) {
+            return ApiResponse::error(
+                'ALREADY_PROCESSED',
+                $e->getMessage(),
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
+        }
     }
 }

@@ -61,4 +61,23 @@ class TenantDatabaseManager
     {
         DB::purge('tenant');
     }
+
+    /**
+     * Get the file path for the tenant's database if sqlite.
+     */
+    public function getDatabasePath(Tenant $tenant): ?string
+    {
+        $identifier = $tenant->databaseConfig?->connection_identifier
+            ?? 'tenant_'.$tenant->slug;
+
+        $driver = config('database.connections.tenant.driver', 'sqlite');
+
+        if ($driver === 'sqlite' && $identifier !== ':memory:') {
+            $dir = database_path('tenants');
+
+            return $dir.DIRECTORY_SEPARATOR.$identifier.'.sqlite';
+        }
+
+        return null;
+    }
 }

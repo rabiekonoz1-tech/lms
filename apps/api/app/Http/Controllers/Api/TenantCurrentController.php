@@ -21,7 +21,13 @@ class TenantCurrentController extends Controller
             'name' => $tenant->name,
             'slug' => $tenant->slug,
             'type' => $tenant->type,
+            'auth_mode' => $tenant->auth_mode ?? 'hybrid',
             'status' => $tenant->status,
+            'logo_url' => $tenant->logo_url,
+            'primary_color' => $tenant->primary_color ?? '#04c3c9',
+            'secondary_color' => $tenant->secondary_color ?? '#0284c7',
+            'brand_tagline' => $tenant->brand_tagline,
+            'brand_settings' => $tenant->brand_settings ?? [],
             'domains' => $tenant->domains->pluck('domain')->values()->all(),
             'features' => $tenant->features->where('enabled', true)->pluck('feature_key')->values()->all(),
         ]);

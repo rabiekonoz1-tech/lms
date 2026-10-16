@@ -16,27 +16,49 @@ class GoogleDriveVideoProvider implements VideoProviderInterface
 
     public function getEmbedUrl(string $externalVideoId, array $options = []): string
     {
-        return "https://drive.google.com/file/d/{$externalVideoId}/preview";
+        $fileId = $this->extractFileId($externalVideoId);
+
+        return "https://drive.google.com/file/d/{$fileId}/preview";
     }
 
     public function uploadVideo(VideoUploadRequest $request): VideoUploadResponse
     {
-        $id = $request->externalId ?: Str::random(28);
+        $rawId = $request->externalId ?: Str::random(28);
+        $fileId = $this->extractFileId($rawId);
+        $clientId = config('services.google.client_id');
 
         return new VideoUploadResponse(
-            externalVideoId: $id,
-            embedUrl: $this->getEmbedUrl($id),
-            playbackUrl: "https://drive.google.com/file/d/{$id}/view",
+            externalVideoId: $fileId,
+            embedUrl: $this->getEmbedUrl($fileId),
+            playbackUrl: "https://drive.google.com/file/d/{$fileId}/view",
             status: 'ready',
             provider: 'google_drive',
             durationSeconds: null,
             sizeBytes: null,
             rawPayload: [
-                'fileId' => $id,
+                'fileId' => $fileId,
                 'name' => $request->title,
                 'mimeType' => 'video/mp4',
+                'google_drive_enabled' => true,
+                'client_id_configured' => ! empty($clientId),
             ]
         );
+    }
+
+    /**
+     * Extract Google Drive File ID from URL or input string.
+     */
+    public function extractFileId(string $input): string
+    {
+        $input = trim($input);
+        if (preg_match('#/file/d/([a-zA-Z0-9_-]+)#', $input, $matches)) {
+            return $matches[1];
+        }
+        if (preg_match('#[?&]id=([a-zA-Z0-9_-]+)#', $input, $matches)) {
+            return $matches[1];
+        }
+
+        return $input;
     }
 
     public function getVideoStatus(string $externalVideoId): string

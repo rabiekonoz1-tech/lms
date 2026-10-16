@@ -37,7 +37,7 @@ class TenantResolver
      */
     protected function resolveFromHeaders(Request $request): ?Tenant
     {
-        $slug = $request->header('X-Tenant-Slug');
+        $slug = $request->header('X-Tenant-Slug') ?? $request->header('X-Tenant');
         if (is_string($slug) && trim($slug) !== '') {
             return Tenant::with(['domains', 'databaseConfig', 'features'])
                 ->where('slug', trim($slug))

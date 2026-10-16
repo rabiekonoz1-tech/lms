@@ -52,4 +52,9 @@ Per Phase J §38–§40:
 
 ## 6. Verification Status
 - **Status**: `VERIFIED`
-- **Gate Test**: `Tests\Feature\IntegrationGateTest` (Phase J §40 Gate)
+- **Gate Tests**:
+  - `Tests\Feature\IntegrationGateTest` (Phase J §40 Gate)
+  - `Tests\Feature\GoogleServicesIntegrationTest` (Google Drive File ID & Link Extraction, Embeds & Config)
+- **UI Hubs**:
+  - Teacher: `/teacher/media` (Upload/link Google Drive videos to courses & lessons, live preview)
+  - Student: `/student/courses` (Embedded Google Drive lesson player with anti-abuse dynamic watermark)

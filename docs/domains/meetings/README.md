@@ -57,4 +57,9 @@ Per Phase J §38–§40 and ADR rules:
 
 ## 6. Verification Status
 - **Status**: `VERIFIED`
-- **Gate Test**: `Tests\Feature\IntegrationGateTest` (Phase J §40 Gate)
+- **Gate Tests**:
+  - `Tests\Feature\IntegrationGateTest` (Phase J §40 Gate)
+  - `Tests\Feature\GoogleServicesIntegrationTest` (Google Meet Code Generation, Custom URLs & Config)
+- **UI Hubs**:
+  - Teacher: `/teacher/meetings` (Create, schedule, host launch, student copy link, and cancel)
+  - Student: `/student/meetings` (Live virtual room and direct Google Meet launch)

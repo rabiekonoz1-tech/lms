@@ -65,6 +65,19 @@ class AssignmentController extends Controller
     }
 
     /**
+     * List submissions for an assignment (Teacher).
+     */
+    public function submissions(string $courseId, string $id): JsonResponse
+    {
+        $assignment = Assignment::where('course_id', $courseId)->findOrFail($id);
+        $submissions = AssignmentSubmission::where('assignment_id', $assignment->id)
+            ->with(['student.user', 'gradedBy'])
+            ->get();
+
+        return ApiResponse::success(['submissions' => $submissions]);
+    }
+
+    /**
      * Submit an assignment as a student.
      */
     public function submit(Request $request, string $courseId, string $id): JsonResponse

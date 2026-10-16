@@ -47,7 +47,7 @@ class MediaController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'provider' => 'nullable|string|in:google_drive,vimeo,mock',
-            'external_id' => 'nullable|string|max:255',
+            'external_id' => 'nullable|string|max:1000',
             'media_type' => 'nullable|string|in:video,audio,document',
             'course_id' => 'nullable|uuid|exists:tenant.courses,id',
             'lesson_id' => 'nullable|uuid|exists:tenant.lessons,id',

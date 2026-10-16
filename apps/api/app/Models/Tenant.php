@@ -16,10 +16,33 @@ class Tenant extends Model
 
     protected $fillable = [
         'type',
+        'auth_mode',
         'status',
         'name',
         'slug',
+        'logo_url',
+        'primary_color',
+        'secondary_color',
+        'brand_tagline',
+        'brand_settings',
     ];
+
+    protected $casts = [
+        'brand_settings' => 'array',
+    ];
+
+    /**
+     * Check if tenant allows a specific authentication mode.
+     */
+    public function allowsAuthMode(string $mode): bool
+    {
+        $tenantMode = $this->auth_mode ?? 'hybrid';
+        if ($tenantMode === 'hybrid') {
+            return true;
+        }
+
+        return $tenantMode === $mode;
+    }
 
     /**
      * Domains registered for this tenant.

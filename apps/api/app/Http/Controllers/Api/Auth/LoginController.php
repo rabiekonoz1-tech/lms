@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AccessCredential;
 use App\Models\TenantToken;
 use App\Models\TenantUser;
 use App\Support\ApiResponse;
+use App\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,9 +17,101 @@ class LoginController extends Controller
 {
     /**
      * Authenticate user within the active tenant context.
+     * Enforces configurable tenant authentication models (Phase B BR-013):
+     * - 'password': only email/phone + password allowed
+     * - 'coupon': only access credential coupon allowed
+     * - 'hybrid': both methods allowed (default)
      */
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, TenantContext $tenantContext): JsonResponse
     {
+        $tenant = $tenantContext->getTenantOrFail();
+        $authMode = $tenant->auth_mode ?? 'hybrid';
+
+        // Coupon Login Flow
+        if ($request->filled('coupon_code')) {
+            if ($authMode === 'password') {
+                return ApiResponse::error(
+                    code: 'AUTH_MODE_COUPON_DISABLED',
+                    message: 'Coupon authentication is disabled for this organization.',
+                    status: Response::HTTP_FORBIDDEN
+                );
+            }
+
+            $validated = $request->validate([
+                'coupon_code' => 'required|string',
+                'secret' => 'required|string',
+                'device_id' => 'required|string',
+                'device_fingerprint' => 'required|string',
+            ]);
+
+            $credential = AccessCredential::with(['student.user', 'deviceBinding'])
+                ->where('credential_code', $validated['coupon_code'])
+                ->first();
+
+            if (! $credential) {
+                return ApiResponse::error('CREDENTIAL_NOT_FOUND', 'Coupon code not found.', Response::HTTP_NOT_FOUND);
+            }
+
+            if ($credential->isRevoked()) {
+                return ApiResponse::error('CREDENTIAL_REVOKED', 'This coupon has been revoked.', Response::HTTP_FORBIDDEN);
+            }
+
+            if ($credential->isExpired()) {
+                return ApiResponse::error('CREDENTIAL_EXPIRED', 'This coupon has expired.', Response::HTTP_FORBIDDEN);
+            }
+
+            if (! $credential->verifySecret($validated['secret'])) {
+                return ApiResponse::error('INVALID_CREDENTIAL_SECRET', 'Invalid coupon secret.', Response::HTTP_UNAUTHORIZED);
+            }
+
+            if ($credential->status !== 'active') {
+                return ApiResponse::error('CREDENTIAL_NOT_ACTIVE', 'Coupon is not yet active.', Response::HTTP_FORBIDDEN);
+            }
+
+            // Enforce single-device binding
+            $currentBinding = $credential->deviceBinding;
+            if (! $currentBinding) {
+                $currentBinding = $credential->bindDevice($validated['device_id'], $validated['device_fingerprint']);
+            } elseif (! $currentBinding->matchesDevice($validated['device_id'], $validated['device_fingerprint'])) {
+                return ApiResponse::error(
+                    'SECOND_DEVICE_PROHIBITED',
+                    'Access denied. This coupon is bound to another device.',
+                    Response::HTTP_FORBIDDEN
+                );
+            }
+
+            $user = $credential->student->user;
+            if (! $user || ! $user->isActive()) {
+                return ApiResponse::error('USER_INACTIVE', 'Student account is suspended or inactive.', Response::HTTP_FORBIDDEN);
+            }
+
+            $tokenResult = TenantToken::createTokenFor($user, 'coupon_session');
+
+            return ApiResponse::success([
+                'token' => $tokenResult['plainTextToken'],
+                'token_type' => 'Bearer',
+                'auth_method' => 'coupon',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'type' => $user->type,
+                    'roles' => $user->roles->pluck('name')->values()->all(),
+                    'permissions' => $user->getAllPermissions()->values()->all(),
+                ],
+            ]);
+        }
+
+        // Standard Password Login Flow
+        if ($authMode === 'coupon') {
+            return ApiResponse::error(
+                code: 'AUTH_MODE_PASSWORD_DISABLED',
+                message: 'Password login is disabled for this organization. Please use your coupon code.',
+                status: Response::HTTP_FORBIDDEN
+            );
+        }
+
         $validated = $request->validate([
             'identifier' => 'required|string',
             'password' => 'required|string',
@@ -53,6 +147,7 @@ class LoginController extends Controller
         return ApiResponse::success([
             'token' => $tokenResult['plainTextToken'],
             'token_type' => 'Bearer',
+            'auth_method' => 'password',
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,

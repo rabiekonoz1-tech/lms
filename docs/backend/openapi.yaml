@@ -1,0 +1,200 @@
+openapi: 3.0.3
+info:
+  title: Madar LMS API
+  description: API specifications for the Madar Multi-Tenant LMS backend.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local Development Server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    TenantHeader:
+      in: header
+      name: X-Tenant
+      required: true
+      schema:
+        type: string
+      description: The tenant slug for multi-tenant routing
+security:
+  - bearerAuth: []
+paths:
+  /auth/login:
+    post:
+      summary: Login
+      tags: [Auth]
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, device_name]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                device_name:
+                  type: string
+      responses:
+        '200':
+          description: Successful login
+  /courses:
+    get:
+      summary: List Courses
+      tags: [Education]
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: A list of courses
+  /courses/{id}:
+    put:
+      summary: Update Course
+      tags: [Education]
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Course updated
+  /notifications:
+    get:
+      summary: List Notifications
+      tags: [Notifications]
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: A list of notifications
+  /tenants:
+    post:
+      summary: Provision Tenant
+      tags: [Platform Admin]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, slug, type, owner_name, owner_email, owner_password]
+              properties:
+                name:
+                  type: string
+                slug:
+                  type: string
+                type:
+                  type: string
+                owner_name:
+                  type: string
+                owner_email:
+                  type: string
+                owner_password:
+                  type: string
+      responses:
+        '201':
+          description: Tenant provisioned
+  /tenants/{id}/support-access:
+    post:
+      summary: Generate Support Token
+      tags: [Platform Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Support access granted
+  /tenants/{id}:
+    put:
+      summary: Update Tenant Branding & Metadata
+      tags: [Platform Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                logo_url:
+                  type: string
+                primary_color:
+                  type: string
+                secondary_color:
+                  type: string
+                brand_tagline:
+                  type: string
+      responses:
+        '200':
+          description: Tenant branding updated
+  /platform/audit-logs:
+    get:
+      summary: Query Platform Audit Logs
+      tags: [Platform Admin]
+      parameters:
+        - in: query
+          name: action
+          schema:
+            type: string
+        - in: query
+          name: tenant_id
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Centralized audit log records
+  /audit-logs:
+    get:
+      summary: Query Tenant Audit Logs
+      tags: [Audit]
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - in: query
+          name: action
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tenant-scoped audit logs
+  /student/academies:
+    get:
+      summary: Student Unified Multi-Tenant Overview
+      tags: [Student]
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Unified multi-tenant academies for the student
